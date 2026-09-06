@@ -1,0 +1,253 @@
+---
+import type { Lang } from '../i18n/config';
+import { t } from '../i18n/ui';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const s = t(lang);
+
+/**
+ * Lightbox — vanilla JS, no PhotoSwipe.
+ *
+ * The live site loads PhotoSwipe's script and both its stylesheets on every
+ * page and never uses them: no .pswp template exists in any page's HTML, no
+ * handler is bound to any image, and clicking a product photo does nothing.
+ * On a furniture site whose whole point is the photographs, that is a gap.
+ *
+ * This is included by Base.astro on every page and costs nothing when a page
+ * has no [data-lightbox] triggers — the script exits immediately.
+ *
+ * Behaviour: Escape closes, Left/Right move within the page's gallery, focus
+ * is trapped while open, focus returns to the triggering button on close.
+ */
+---
+
+<dialog class="lightbox" id="lightbox" aria-label={s.enlarged}>
+  <div class="lightbox__inner">
+    {/* Transparent 1x1 placeholder so the element is never a broken image in
+        the DOM before the lightbox is opened. */}
+    <img
+      class="lightbox__img"
+      id="lightbox-img"
+      alt=""
+      src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+    />
+    <p class="lightbox__caption" id="lightbox-caption"></p>
+  </div>
+
+  <button type="button" class="lightbox__btn lightbox__close" id="lightbox-close">
+    <span aria-hidden="true">×</span><span class="visually-hidden">{s.close}</span>
+  </button>
+  <button type="button" class="lightbox__btn lightbox__prev" id="lightbox-prev">
+    <span aria-hidden="true">‹</span><span class="visually-hidden">{s.prevImage}</span>
+  </button>
+  <button type="button" class="lightbox__btn lightbox__next" id="lightbox-next">
+    <span aria-hidden="true">›</span><span class="visually-hidden">{s.nextImage}</span>
+  </button>
+  <p class="lightbox__counter" id="lightbox-counter" aria-live="polite"></p>
+</dialog>
+
+<style>
+  .lightbox {
+    padding: 0;
+    border: 0;
+    max-width: 100vw;
+    max-height: 100vh;
+    width: 100vw;
+    height: 100vh;
+    background: var(--color-bg);
+    color: var(--color-text);
+  }
+
+  .lightbox::backdrop {
+    background: rgb(255 255 255 / 0.97);
+  }
+
+  .lightbox__inner {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-3);
+    padding: var(--space-6) var(--space-5);
+  }
+
+  .lightbox__img {
+    max-width: 100%;
+    max-height: 78vh;
+    width: auto;
+    object-fit: contain;
+  }
+
+  .lightbox__caption {
+    margin: 0;
+    text-align: center;
+    max-width: 60ch;
+    font-size: var(--fs-nav);
+  }
+
+  .lightbox__btn {
+    position: absolute;
+    border: 0;
+    background: none;
+    cursor: pointer;
+    color: var(--color-link);
+    font-family: var(--font-heading);
+    line-height: 1;
+    padding: var(--space-2) var(--space-3);
+    font-size: 2rem;
+  }
+
+  .lightbox__close {
+    top: var(--space-3);
+    right: var(--space-3);
+  }
+
+  .lightbox__prev {
+    left: var(--space-2);
+    top: 50%;
+    transform: translateY(-50%);
+  }
+
+  .lightbox__next {
+    right: var(--space-2);
+    top: 50%;
+    transform: translateY(-50%);
+  }
+
+  .lightbox__counter {
+    position: absolute;
+    bottom: var(--space-3);
+    left: 0;
+    right: 0;
+    text-align: center;
+    margin: 0;
+    font-size: var(--fs-form);
+  }
+
+  .lightbox[data-single='true'] .lightbox__prev,
+  .lightbox[data-single='true'] .lightbox__next,
+  .lightbox[data-single='true'] .lightbox__counter {
+    display: none;
+  }
+</style>
+
+<script>
+  const dialog = document.getElementById('lightbox') as HTMLDialogElement | null;
+  const triggers = Array.from(
+    document.querySelectorAll<HTMLButtonElement>('[data-lightbox]')
+  );
+
+  if (dialog && triggers.length > 0) {
+    const img = document.getElementById('lightbox-img') as HTMLImageElement;
+    const caption = document.getElementById('lightbox-caption') as HTMLElement;
+    const counter = document.getElementById('lightbox-counter') as HTMLElement;
+    const closeBtn = document.getElementById('lightbox-close') as HTMLButtonElement;
+    const prevBtn = document.getElementById('lightbox-prev') as HTMLButtonElement;
+    const nextBtn = document.getElementById('lightbox-next') as HTMLButtonElement;
+
+    let index = 0;
+    let opener: HTMLElement | null = null;
+
+    dialog.dataset.single = String(triggers.length === 1);
+
+    const show = (i: number) => {
+      // Wrap at both ends so the gallery is a loop.
+      index = (i + triggers.length) % triggers.length;
+      const t = triggers[index];
+      img.src = t.dataset.full ?? '';
+      img.alt = t.dataset.alt ?? '';
+      const w = t.dataset.width;
+      const h = t.dataset.height;
+      if (w) img.width = Number(w);
+      if (h) img.height = Number(h);
+      caption.textContent = t.dataset.alt ?? '';
+      counter.textContent = `${index + 1} / ${triggers.length}`;
+    };
+
+    /* Whether this overlay owns the top history entry. See the block below. */
+    let pushed = false;
+
+    const open = (i: number, from: HTMLElement) => {
+      opener = from;
+      show(i);
+      dialog.showModal();
+      closeBtn.focus();
+      /*
+       * A history entry, so that the Back gesture dismisses the picture instead
+       * of leaving the page. On Android, Back IS how people close a full-screen
+       * overlay; without this, opening a photograph and pressing Back threw the
+       * visitor off the page entirely, and Forward returned it with the picture
+       * closed. The cost is one extra entry, so backing out of the page takes
+       * two presses while a picture is open — the usual trade, and worth it.
+       */
+      history.pushState({ lightbox: true }, '');
+      pushed = true;
+    };
+
+    const close = () => {
+      /* Going back is what closes it: popstate below calls dialog.close(). That
+         keeps the history stack and the overlay in step no matter which way it
+         was dismissed — button, Escape, click beside the picture, or Back. */
+      if (pushed) history.back();
+      else dialog.close();
+    };
+
+    window.addEventListener('popstate', () => {
+      if (!dialog.open) return;
+      pushed = false;
+      dialog.close();
+    });
+
+    const inner = dialog.querySelector('.lightbox__inner');
+
+    triggers.forEach((t, i) => t.addEventListener('click', () => open(i, t)));
+    closeBtn.addEventListener('click', close);
+    prevBtn.addEventListener('click', () => show(index - 1));
+    nextBtn.addEventListener('click', () => show(index + 1));
+
+    /* <dialog> closes itself on Escape, which would leave our history entry
+       behind. Take it over so Escape goes through the same path as everything
+       else. */
+    dialog.addEventListener('cancel', (e) => {
+      e.preventDefault();
+      close();
+    });
+
+    // Returns focus to the trigger however the dialog was closed.
+    dialog.addEventListener('close', () => {
+      opener?.focus();
+      opener = null;
+    });
+
+    dialog.addEventListener('keydown', (e) => {
+      if (triggers.length < 2) return;
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        show(index - 1);
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        show(index + 1);
+      }
+    });
+
+    /* Clicking beside the picture closes.
+       This used to be bound to the <dialog> and tested `e.target === dialog`,
+       on the theory that clicks landing on the backdrop surface through to the
+       element. They do not here: the dialog is sized to the full viewport and
+       .lightbox__inner fills it, so every click inside the dialog hits the
+       inner div and the condition was unreachable — a documented affordance
+       that had never once fired. Measured: elementFromPoint at both corners
+       returns DIV.lightbox__inner.
+
+       Bound to the inner element instead, which is the surface the visitor
+       actually clicks. Clicks on the image, the caption or the buttons have
+       those as their target and are left alone. */
+    inner.addEventListener('click', (e) => {
+      if (e.target === inner) close();
+    });
+  }
+</script>

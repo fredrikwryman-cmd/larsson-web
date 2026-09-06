@@ -1,0 +1,134 @@
+---
+import Figure from './Figure.astro';
+import { categoryLabel } from '../data/categories';
+import { productPath, withBase, type Lang } from '../i18n/config';
+import { t } from '../i18n/ui';
+
+interface Props {
+  slug: string;
+  name: string;
+  categorySlug: string;
+  file: string;
+  /**
+   * Measurement lines for this card, per language. Absent or empty means the
+   * product publishes no measurements — bord-olika-modeller is the one such
+   * model, and its card renders no measurement markup at all.
+   */
+  dimensions?: Record<Lang, string[]>;
+  lang: Lang;
+  /** Heading level — h2 in a grid under an h1. */
+  as?: 'h2' | 'h3';
+  loading?: 'lazy' | 'eager';
+}
+
+const {
+  slug,
+  name,
+  categorySlug,
+  file,
+  dimensions,
+  lang,
+  as: Heading = 'h2',
+  loading = 'lazy',
+} = Astro.props;
+const s = t(lang);
+
+/**
+ * Height / depth / width / seat height, so the grid answers "will it fit?"
+ * without opening nine pages. The lines come verbatim from the published
+ * `dimensions_raw` block, so the seat-height ranges (soffa-230, stol-314,
+ * stol-c) and pall-230's "Längd" instead of "Djup" come out right rather than
+ * being reassembled from the typed fields, which are null in exactly those
+ * places. bord-olika-modeller publishes none and gets no block — not a dash,
+ * not an empty list.
+ *
+ * Deliberately OUTSIDE the card's anchor: the whole card is one link, and
+ * folding four measurements into its accessible name would make it unusable.
+ */
+const measurements = dimensions?.[lang] ?? [];
+---
+
+<article class="card" data-category={categorySlug}>
+  <a class="card__link" href={withBase(productPath(lang, slug))}>
+    <Figure
+      file={file}
+      alt=""
+      variant="thumb"
+      sizes="(min-width: 992px) 366px, (min-width: 576px) 45vw, 100vw"
+      loading={loading}
+      lang={lang}
+    />
+    <Heading class="card__title">{name}</Heading>
+    {/* The live site rolls the category name up and the word "Explore" down on
+        hover. Same 26px roll, 500ms — but the label is localised now. */}
+    <span class="card__roll" aria-hidden="true">
+      <span class="card__roll-item">{categoryLabel(categorySlug, lang)}</span>
+      <span class="card__roll-item">{s.showModel}</span>
+    </span>
+  </a>
+  {
+    measurements.length > 0 && (
+      <ul class="card__dims">
+        {measurements.map((line) => (
+          <li>{line}</li>
+        ))}
+      </ul>
+    )
+  }
+</article>
+
+<style>
+  .card {
+    margin: 0;
+  }
+
+  .card__link {
+    display: block;
+  }
+
+  .card__title {
+    font-size: var(--fs-heading);
+    margin: var(--space-3) 0 var(--space-1);
+  }
+
+  /* 26px-tall window; the inner stack translates -100% over 500ms on hover or
+     keyboard focus. Focus is included deliberately — the live site's version is
+     hover-only and therefore invisible to keyboard users. */
+  /* The roll is one line tall and hides the second. Its height was 26px, a
+     hard number that does not grow with the text: at a 200% root font size the
+     40px glyphs were sliced horizontally through their middles inside a 26px
+     box — unreadable, and unreadable for exactly the people who enlarged the
+     text. Expressed in em, the window scales with what it contains. */
+  .card__roll {
+    display: block;
+    height: 1.625em;
+    overflow: hidden;
+    font-size: var(--fs-nav);
+    line-height: 1.625em;
+  }
+
+  .card__roll-item {
+    display: block;
+    height: 26px;
+    transition: transform 500ms ease;
+  }
+
+  .card__link:hover .card__roll-item,
+  .card__link:focus-visible .card__roll-item {
+    transform: translateY(-100%);
+  }
+
+  /* Supporting information, not a spec sheet: the site's small size, no rules,
+     no fills, no icons. The measurements flow as one wrapping line and break
+     between whole "Label: value" pairs, so nothing needs a separator glyph the
+     rest of the site never uses. */
+  .card__dims {
+    list-style: none;
+    margin: var(--space-2) 0 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    column-gap: var(--space-3);
+    font-size: var(--fs-form);
+  }
+</style>

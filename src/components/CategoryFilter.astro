@@ -1,0 +1,113 @@
+---
+/**
+ * Category filter for /produkter/.
+ *
+ * On the live site this exists and works — but its only trigger,
+ * `.wpspd-filter-button`, is `display:none` at every width and every scroll
+ * position, AND is nested inside the overlay it is meant to open. No user can
+ * reach it. Here the filter is a plain, always-visible row of real <button>
+ * elements: no overlay, no hidden trigger, keyboard operable, with the active
+ * state exposed via aria-pressed.
+ *
+ * Filtering is in place with `hidden` — no navigation, no history entry — which
+ * matches the live behaviour. Isotope is not used.
+ */
+import { categories } from '../data/categories';
+import type { Lang } from '../i18n/config';
+import { t } from '../i18n/ui';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const s = t(lang);
+---
+
+<div class="filter" role="group" aria-labelledby="filter-label">
+  <h2 class="filter__label" id="filter-label">{s.filter}</h2>
+  <ul class="filter__list">
+    <li>
+      <button type="button" class="filter__btn" data-filter="all" aria-pressed="true">
+        {s.allModels}
+      </button>
+    </li>
+    {
+      categories.map((c) => (
+        <li>
+          <button type="button" class="filter__btn" data-filter={c.slug} aria-pressed="false">
+            {c.label[lang]}
+          </button>
+        </li>
+      ))
+    }
+  </ul>
+</div>
+
+<style>
+  .filter {
+    margin-bottom: var(--space-5);
+  }
+
+  .filter__label {
+    font-size: var(--fs-nav);
+    margin: 0 0 var(--space-2);
+  }
+
+  .filter__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-4);
+  }
+
+  .filter__btn {
+    border: 0;
+    background: none;
+    padding: var(--space-1) 0;
+    cursor: pointer;
+    font-family: var(--font-body);
+    font-weight: var(--fw-body);
+    font-size: var(--fs-nav);
+    color: var(--color-link);
+    border-bottom: 1px solid transparent;
+  }
+
+  .filter__btn:hover {
+    color: var(--color-link-hover);
+  }
+
+  .filter__btn[aria-pressed='true'] {
+    border-bottom-color: var(--color-link);
+  }
+</style>
+
+<script>
+  const buttons = Array.from(
+    document.querySelectorAll<HTMLButtonElement>('.filter__btn')
+  );
+  const items = Array.from(
+    document.querySelectorAll<HTMLElement>('#product-grid .grid__item')
+  );
+  const empty = document.getElementById('grid-empty');
+
+  if (buttons.length > 0 && items.length > 0) {
+    const apply = (filter: string) => {
+      let shown = 0;
+      for (const item of items) {
+        const match = filter === 'all' || item.dataset.category === filter;
+        item.hidden = !match;
+        if (match) shown++;
+      }
+      if (empty) empty.hidden = shown > 0;
+      for (const b of buttons) {
+        b.setAttribute('aria-pressed', String(b.dataset.filter === filter));
+      }
+    };
+
+    for (const b of buttons) {
+      b.addEventListener('click', () => apply(b.dataset.filter ?? 'all'));
+    }
+  }
+</script>

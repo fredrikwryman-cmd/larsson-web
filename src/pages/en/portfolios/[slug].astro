@@ -1,0 +1,76 @@
+---
+import Base from '../../../layouts/Base.astro';
+import ProductDetail from '../../../components/pages/ProductDetail.astro';
+import { productsInOrder, cardTitle } from '../../../lib/products';
+import { productEn } from '../../../lib/content';
+import { getImage as getAsset } from '../../../lib/images';
+import { getImage as astroGetImage } from 'astro:assets';
+import { company } from '../../../data/company';
+import { categoryLabel } from '../../../data/categories';
+import { PAGE_PATHS, productPath, withBase, type Lang } from '../../../i18n/config';
+import { t } from '../../../i18n/ui';
+
+export async function getStaticPaths() {
+  const sorted = await productsInOrder();
+  return sorted.map((entry, i) => ({
+    params: { slug: entry.data.slug },
+    props: {
+      entry,
+      prev: sorted[(i - 1 + sorted.length) % sorted.length],
+      next: sorted[(i + 1) % sorted.length],
+    },
+  }));
+}
+
+const lang: Lang = 'en';
+const { entry, prev, next } = Astro.props;
+const d = entry.data;
+
+const en = lang === 'en' ? productEn(d.slug) : null;
+const description = en ? en.description : d.description;
+const material = en ? en.material : d.material;
+
+const hero = d.images[0];
+const ogImg = await astroGetImage({ src: getAsset(hero.file), width: 1200, format: 'jpeg' });
+const heroAbs = new URL(ogImg.src, Astro.site).href;
+
+/** Product JSON-LD. No `offers` — the site publishes no price anywhere. */
+const dims: Record<string, number | null> = {
+  Height: d.dimensions.height_mm,
+  Depth: d.dimensions.depth_mm,
+  Width: d.dimensions.width_mm,
+  'Seat height': d.dimensions.seat_height_mm,
+};
+const additionalProperty = Object.entries(dims)
+  .filter(([, v]) => v !== null)
+  .map(([name, v]) => ({ '@type': 'PropertyValue', name, value: v, unitCode: 'MMT' }));
+
+const structuredData: Record<string, unknown> = {
+  '@context': 'https://schema.org',
+  '@type': 'Product',
+  name: d.name,
+  description: description ?? d.body_text,
+  image: heroAbs,
+  category: categoryLabel(d.category_slug, lang),
+  manufacturer: { '@type': 'Organization', name: company.legalName },
+  inLanguage: lang,
+};
+if (material) structuredData.material = material;
+if (additionalProperty.length) structuredData.additionalProperty = additionalProperty;
+
+const breadcrumbs = [
+  { label: t(lang).nav.products, href: withBase(PAGE_PATHS.products[lang]) },
+];
+---
+
+<Base
+  lang={lang}
+  altPath={productPath('sv', d.slug)}
+  title={cardTitle(d.slug, d.name)}
+  description={(description ?? '').slice(0, 158)}
+  ogImageFile={hero.file}
+  structuredData={structuredData}
+  breadcrumbs={breadcrumbs}
+>
+  <ProductDetail lang={lang} entry={entry} prev={prev} next={next} />
+</Base>

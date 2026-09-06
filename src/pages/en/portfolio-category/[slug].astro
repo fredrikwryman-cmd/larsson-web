@@ -1,0 +1,34 @@
+---
+import Base from '../../../layouts/Base.astro';
+import CategoryPage from '../../../components/pages/CategoryPage.astro';
+import { categories } from '../../../data/categories';
+import { productItems } from '../../../lib/products';
+import { PAGE_PATHS, categoryPath, withBase, type Lang } from '../../../i18n/config';
+import { t } from '../../../i18n/ui';
+
+export async function getStaticPaths() {
+  const items = await productItems();
+  return categories.map((cat) => ({
+    params: { slug: cat.slug },
+    props: { cat, items: items.filter((p) => p.categorySlug === cat.slug) },
+  }));
+}
+
+const lang: Lang = 'en';
+const { cat, items } = Astro.props;
+
+const breadcrumbs = [
+  { label: t(lang).nav.products, href: withBase(PAGE_PATHS.products[lang]) },
+];
+---
+
+<Base
+  lang={lang}
+  altPath={categoryPath('sv', cat.slug)}
+  title={cat.label[lang]}
+  description={cat.description[lang]}
+  ogImageFile={items[0]?.file}
+  breadcrumbs={breadcrumbs}
+>
+  <CategoryPage lang={lang} cat={cat} items={items} />
+</Base>

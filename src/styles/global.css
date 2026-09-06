@@ -1,0 +1,176 @@
+/* ===========================================================================
+   GLOBAL BASE — Larsson Korgmakare
+   Structure and typography only. Every value comes from tokens.css; no
+   literal font family, colour or type size appears in this file.
+   =========================================================================== */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-weight: var(--fw-body);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  letter-spacing: var(--ls-normal);
+  -webkit-font-smoothing: antialiased;
+}
+
+img,
+picture,
+svg {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-heading);
+  font-weight: var(--fw-heading);
+  font-size: var(--fs-heading);
+  line-height: var(--lh-heading);
+  margin: 0 0 var(--space-3);
+}
+
+/* The live site's only display size: the fluid category-page h1. */
+.display {
+  font-size: var(--fs-display);
+  line-height: var(--lh-display);
+}
+
+p {
+  margin: 0 0 var(--space-4);
+}
+
+p:last-child {
+  margin-bottom: 0;
+}
+
+a {
+  color: var(--color-link);
+  text-decoration: none;
+}
+
+a:hover {
+  color: var(--color-link-hover);
+}
+
+/* ---------------------------------------------------------------------------
+   FOCUS — a requirement, not a nice-to-have.
+
+   The live site is effectively mouse-only: its hamburger, close buttons and
+   filter trigger are non-focusable <div>/<span> elements with no tabindex,
+   role or ARIA, so a keyboard user cannot open the navigation at all. This
+   rebuild uses real <button> and <a> elements everywhere, and every one of
+   them shows a visible ring. Never remove this without a replacement.
+   --------------------------------------------------------------------------- */
+:focus-visible {
+  outline: 2px solid var(--color-link);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+/* Older engines that lack :focus-visible still get a ring. */
+@supports not selector(:focus-visible) {
+  :focus {
+    outline: 2px solid var(--color-link);
+    outline-offset: 3px;
+  }
+}
+
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 200;
+  background: var(--color-bg);
+  color: var(--color-link);
+  padding: var(--space-3) var(--space-4);
+}
+
+.skip-link:focus {
+  left: var(--space-3);
+  top: var(--space-3);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---------------------------------------------------------------------------
+   LAYOUT
+   The live site centres content in a fixed measure with generous margins.
+   --------------------------------------------------------------------------- */
+.wrap {
+  /* The live site's content box measures 1146px at wide viewports and its side
+     gutter is ~30px at 390px. Padding sits INSIDE max-width, so the max-width
+     has to include it or the column comes out 2x30px too narrow — which is
+     exactly what was happening: 1098px against the original's 1146px, enough
+     to change where paragraphs broke. */
+  --wrap-gutter: 30px;
+  max-width: calc(1146px + 2 * var(--wrap-gutter));
+  margin-inline: auto;
+  padding-inline: var(--wrap-gutter);
+}
+
+.wrap--narrow {
+  max-width: 820px;
+}
+
+main {
+  display: block;
+  padding-block: var(--space-6);
+}
+
+/* Respect a user's reduced-motion preference across every transition the
+   site adds — the menu fade, the lightbox, the card hover roll. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* `hidden` must always mean hidden. Author rules like `img, picture, svg
+   { display: block }` below outrank the user agent's [hidden] { display: none }
+   on specificity, and a component that shows and hides itself with the
+   attribute then silently stops working — which is exactly what happened to the
+   assistant's launcher and panel. One rule closes the whole class. */
+[hidden] {
+  display: none !important;
+}
+
+/* An email address and a bare domain are single unbreakable words. At a large
+   root font size they are wider than a phone viewport and pushed the page
+   sideways. Breaking them is the lesser evil; nothing else in the body copy is
+   long enough for this to change. */
+main :is(p, li, dd, figcaption) {
+  overflow-wrap: break-word;
+}

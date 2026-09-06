@@ -1,0 +1,1141 @@
+---
+import { Image } from 'astro:assets';
+import monogram from '../assets/LK-160x160.png';
+import { ASSISTANT_UI, ASSISTANT_CONFIG, SENT_CLAIM_PATTERN } from '../i18n/assistant-ui';
+import { PAGE_PATHS, withBase, type Lang } from '../i18n/config';
+import { company } from '../data/company';
+
+/**
+ * The answer assistant.
+ *
+ * Ported from the widget on kastar-se, with its five load-bearing ideas kept
+ * intact and its Swedish lifted out into src/i18n/assistant-ui.ts:
+ *
+ *   1. Lead detection is deterministic and happens in this file, before the
+ *      model is ever called. A phone number or an email address in what the
+ *      visitor typed makes the conversation a lead. The model does not get a
+ *      vote, because a model that decides not to call its tool would otherwise
+ *      lose the enquiry silently.
+ *   2. Two sends, each behind its own guard flag: A the moment a contact detail
+ *      appears, B when the conversation is complete. The flags are mirrored into
+ *      sessionStorage with the transcript, so a reload cannot send either twice.
+ *   3. A retry queue in localStorage — not sessionStorage — so an enquiry that
+ *      failed to post survives the tab being closed.
+ *   4. A truth filter: any sentence claiming something was sent is removed
+ *      unless this script has a 2xx from Web3Forms in hand.
+ *   5. Everything the model says is written with textContent. No HTML from the
+ *      model reaches the DOM at any point.
+ *
+ * Three things the source flagged as unfinished are finished here: the focus
+ * trap that aria-modal was promising, a <noscript> route to a human, and the
+ * strings, which now live in one config object and carry a second language.
+ */
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const s = ASSISTANT_UI[lang];
+const contactHref = withBase(PAGE_PATHS.contact[lang]);
+const config = {
+  ...ASSISTANT_CONFIG,
+  lang,
+  sentClaim: SENT_CLAIM_PATTERN[lang],
+  strings: s,
+};
+---
+
+<div class="assist">
+  <button type="button" class="assist__open" id="lkAssistOpen" aria-haspopup="dialog">
+    {/* Decorative, like the one in the panel header: the words beside it are the
+        button's accessible name and already say what it opens. */}
+    <Image
+      src={monogram}
+      alt=""
+      width={22}
+      height={22}
+      densities={[1, 2]}
+      class="assist__openmark"
+    />
+    {s.open}
+  </button>
+
+  <div
+    class="assist__panel"
+    id="lkAssistPanel"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="lkAssistTitle"
+    hidden
+  >
+    <div class="assist__head">
+      <div class="assist__ident">
+        {/*
+          The workshop's own monogram, the same file the site header uses.
+          alt="" because it is decorative here: the two lines beside it already
+          say what this is, and a screen reader that announced the mark as well
+          would say the name twice.
+        */}
+        <Image
+          src={monogram}
+          alt=""
+          width={36}
+          height={36}
+          densities={[1, 2]}
+          class="assist__mark"
+        />
+        <div class="assist__names">
+          <h2 class="assist__title" id="lkAssistTitle">{s.title}</h2>
+          <p class="assist__sub">{s.subtitle}</p>
+        </div>
+      </div>
+      <div class="assist__tools">
+        <button type="button" id="lkAssistRestart">{s.restart}</button>
+        {/*
+          The close control is a multiplication sign, not the letter x and not an
+          icon font. It is hidden from assistive tech and the button carries the
+          real word as its accessible name, so a screen reader still hears
+          "Stäng" / "Close" rather than "times".
+        */}
+        <button type="button" id="lkAssistClose" aria-label={s.close}>
+          <span aria-hidden="true">&#215;</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="assist__log" id="lkAssistLog" role="log" aria-live="polite" aria-label={s.title}>
+    </div>
+
+    <form class="assist__form" id="lkAssistForm">
+      <label class="visually-hidden" for="lkAssistField">{s.inputLabel}</label>
+      <div class="assist__row">
+        <textarea
+          id="lkAssistField"
+          rows="1"
+          placeholder={s.placeholder}
+          maxlength={ASSISTANT_CONFIG.maxChars}
+          autocomplete="off"></textarea>
+        <button type="submit" id="lkAssistSend">
+          {s.send}<span class="assist__arrow" aria-hidden="true">&#8594;</span>
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <noscript>
+    <div class="assist__noscript">
+      <p>
+        {s.noscriptBefore}<a href={company.phone.href}>{company.phone.display}</a>{s.noscriptAfter}
+      </p>
+      <p><a href={contactHref}>{s.noscriptLink}</a></p>
+    </div>
+  </noscript>
+</div>
+
+<style>
+  /* The corner of the page, on the site's own terms. Everything here is the
+     beige, the ink and the type already in use; what changed in the rebuild is
+     the composition — hairlines and whitespace doing the structural work that
+     boxes and bubbles were doing before.
+
+     One derived value is declared: --assist-rule, the existing ink at a quarter
+     opacity, for the rules BETWEEN messages. A full-strength line every few
+     paragraphs reads as a component boundary; this reads as a layout rule in a
+     printed page, which is the whole point. The frame and the two structural
+     dividers stay full strength. */
+  .assist {
+    --assist-rule: rgba(33, 33, 33, 0.24);
+    /* A label size. The body copy stays on the site's own scale — this exists
+       only for the tracked capitals, which need to sit below the text they
+       introduce or they shout. */
+    --assist-label: 0.8125rem;
+    position: fixed;
+    right: var(--space-3);
+    bottom: var(--space-3);
+    z-index: 60;
+    font-size: var(--fs-form);
+  }
+
+  /* `hidden` is how this widget shows and hides its parts, and an author
+     `display` rule outranks the user agent's [hidden] { display: none }.
+     Attribute selectors win on specificity, so no !important is needed. */
+  .assist__open[hidden],
+  .assist__panel[hidden],
+  .assist__topics[hidden] {
+    display: none;
+  }
+
+  .assist__open {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6em;
+    margin-left: auto;
+    padding: 0.55em 1em;
+    border: 1px solid var(--color-text);
+    background: var(--color-panel);
+    color: var(--color-text);
+    font: inherit;
+    font-size: var(--fs-form);
+    letter-spacing: 0.06em;
+    line-height: 1.2;
+    cursor: pointer;
+  }
+
+  .assist__openmark {
+    flex: none;
+    width: 22px;
+    height: 22px;
+  }
+
+  /* Hover underlines the words rather than inverting the button. The monogram
+     is a dark mark on a transparent ground — on an inked background it would
+     simply vanish, and we have no beige version of the artwork. An underline is
+     also what every other text control in this widget does. */
+  .assist__open:hover {
+    text-decoration: underline;
+    text-underline-offset: 0.25em;
+  }
+
+  .assist__panel {
+    display: flex;
+    flex-direction: column;
+    /* Wide enough for the text to breathe, as the brief asked. 28rem = 448px. */
+    width: min(28rem, calc(100vw - 2 * var(--space-3)));
+    height: min(34rem, calc(100dvh - 2 * var(--space-3)));
+    border: 1px solid var(--color-text);
+    border-radius: 0;
+    background: var(--color-panel);
+  }
+
+  /* ---------- header ---------- */
+  .assist__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding: var(--space-4) var(--space-4) var(--space-3);
+    border-bottom: 1px solid var(--color-text);
+  }
+
+  /* The mark sits against the two lines as a pair, centred on them together
+     rather than on either one. */
+  .assist__ident {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    min-width: 0;
+  }
+
+  .assist__mark {
+    flex: none;
+    width: 36px;
+    height: 36px;
+  }
+
+  .assist__names {
+    min-width: 0;
+  }
+
+  .assist__title {
+    margin: 0;
+    font-size: var(--fs-form);
+    font-weight: 400;
+    /* Capitals come from the CSS, never the string: a screen reader given
+       "FRÅGA VERKSTADEN" in the markup may spell it out. */
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    line-height: 1.2;
+  }
+
+  .assist__sub {
+    margin: 0.5em 0 0;
+    font-size: var(--assist-label);
+    line-height: 1.2;
+  }
+
+  .assist__tools {
+    display: flex;
+    align-items: center;
+    /* 24px, so the two controls clear the WCAG 2.2 AA spacing exception. */
+    gap: 1.5rem;
+    flex: none;
+  }
+
+  .assist__tools button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 24px;
+    min-width: 24px;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--color-text);
+    font: inherit;
+    font-size: var(--assist-label);
+    cursor: pointer;
+  }
+
+  #lkAssistRestart {
+    text-decoration: underline;
+    text-underline-offset: 0.18em;
+  }
+
+  #lkAssistClose {
+    font-size: 1.35rem;
+    line-height: 1;
+  }
+
+  .assist__tools button:hover {
+    opacity: 0.65;
+  }
+
+  /* ---------- the transcript ---------- */
+  .assist__log {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    padding: var(--space-4);
+  }
+
+  /* Every entry is the same shape: a tracked label, then what was said. No
+     bubbles, no fills, no avatars — the label and the whitespace carry it. */
+  .assist__log :global(.assist__block + .assist__block) {
+    margin-top: var(--space-4);
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--assist-rule);
+  }
+
+  .assist__log :global(.assist__label) {
+    margin: 0;
+    font-size: var(--assist-label);
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    line-height: 1.4;
+  }
+
+  .assist__log :global(.assist__body) {
+    margin: 0.7em 0 0;
+    /* Airier than the page's own body copy: this is read in a narrow column,
+       a few lines at a time, often on a phone. */
+    line-height: 1.55;
+    white-space: pre-wrap;
+  }
+
+  .assist__log :global(.assist__block--meta .assist__body) {
+    font-size: var(--assist-label);
+    line-height: 1.5;
+  }
+
+  /* ---------- the ways in ---------- */
+  .assist__log :global(.assist__topics) {
+    list-style: none;
+    margin: var(--space-4) 0 0;
+    padding: 0;
+  }
+
+  .assist__log :global(.assist__topic) {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5em;
+    min-height: 24px;
+    padding: 0.25em 0;
+    border: 0;
+    background: none;
+    color: var(--color-text);
+    font: inherit;
+    font-size: var(--assist-label);
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  /* On a way in, the arrow is the whole hover treatment: it arrives, it does
+     not glow. On the send control it is part of the words — SKICKA → — and is
+     always there; hovering only nudges it. */
+  .assist__log :global(.assist__topic .assist__arrow) {
+    opacity: 0;
+    transform: translateX(-0.25em);
+    transition: opacity 120ms linear, transform 120ms linear;
+  }
+
+  .assist__form .assist__arrow {
+    opacity: 1;
+    transition: transform 120ms linear;
+  }
+
+  .assist__log :global(.assist__topic:hover .assist__arrow),
+  .assist__log :global(.assist__topic:focus-visible .assist__arrow) {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  /* ---------- the input ---------- */
+  .assist__form {
+    padding: var(--space-3) var(--space-4) var(--space-4);
+    border-top: 1px solid var(--color-text);
+  }
+
+  /* The writing rule runs the full width of the row — under the field AND under
+     SKICKA — because a line that stopped at the edge of the field read as a
+     border that had been cut off rather than as a rule to write on. It is there
+     all the time at a quarter strength and inks in when the field has focus,
+     which is also how the field says it is focused: no ring, no box. */
+  .assist__row {
+    display: flex;
+    align-items: flex-end;
+    gap: var(--space-4);
+    padding-bottom: 0.4em;
+    border-bottom: 2px solid var(--assist-rule);
+  }
+
+  .assist__row:focus-within {
+    border-bottom-color: var(--color-text);
+  }
+
+  /* No second frame. The rule above the row is the only line it needs.
+
+     The focus indicator is an underline rather than the ring used everywhere
+     else, and that is deliberate: the panel focuses this field the moment it
+     opens, so a 2px ring with an offset drew a box round the whole input — the
+     exact double frame the rebuild set out to remove — before the visitor had
+     touched anything. The underline is ink on beige, about 13:1, two pixels,
+     and spans the control, so it is unmistakable without being a box. The
+     transparent border is always there so nothing shifts when it colours in. */
+  /* One line to start with, growing to four as the question does. The old two
+     rows left the placeholder stranded well above the rule. */
+  .assist__form textarea {
+    flex: 1 1 auto;
+    min-width: 0;
+    height: 1.5em;
+    max-height: 6em;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--color-text);
+    font: inherit;
+    font-size: var(--fs-form);
+    line-height: 1.5;
+    resize: none;
+    overflow-y: auto;
+  }
+
+  .assist__form textarea:focus-visible,
+  .assist__form textarea:focus {
+    outline: none;
+  }
+
+  .assist__form textarea::placeholder {
+    color: var(--color-text);
+    opacity: 0.55;
+  }
+
+  .assist__form button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4em;
+    flex: none;
+    min-height: 24px;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--color-text);
+    font: inherit;
+    font-size: var(--assist-label);
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    cursor: pointer;
+  }
+
+  .assist__form button:hover .assist__arrow,
+  .assist__form button:focus-visible .assist__arrow {
+    transform: translateX(0.2em);
+  }
+
+  .assist__form button:hover {
+    text-decoration: underline;
+    text-underline-offset: 0.25em;
+  }
+
+  .assist__form button[disabled] {
+    opacity: 0.45;
+    cursor: default;
+  }
+
+  /* Focus must be visible on the beige, on every control, including the ones
+     this rebuild added. */
+  .assist :global(:focus-visible),
+  .assist :focus-visible {
+    outline: 2px solid var(--color-text);
+    outline-offset: 3px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .assist__log :global(.assist__topic .assist__arrow),
+    .assist__form .assist__arrow {
+      transition: none;
+    }
+
+    .assist__form button:hover .assist__arrow,
+    .assist__form button:focus-visible .assist__arrow {
+      transform: none;
+    }
+  }
+
+  /* ---------- without JavaScript ---------- */
+  .assist__noscript {
+    width: min(28rem, calc(100vw - 2 * var(--space-3)));
+    padding: var(--space-4);
+    border: 1px solid var(--color-text);
+    background: var(--color-panel);
+    font-size: var(--assist-label);
+    line-height: 1.5;
+  }
+
+  .assist__noscript p {
+    margin: 0 0 0.7em;
+  }
+
+  .assist__noscript p:last-child {
+    margin-bottom: 0;
+  }
+
+  /* A fixed panel printed over the page helps nobody. */
+  @media print {
+    .assist {
+      display: none;
+    }
+  }
+</style>
+
+<script is:inline define:vars={{ C: config }}>
+  (function () {
+    var open = document.getElementById('lkAssistOpen');
+    var panel = document.getElementById('lkAssistPanel');
+    var log = document.getElementById('lkAssistLog');
+    var form = document.getElementById('lkAssistForm');
+    var field = document.getElementById('lkAssistField');
+    var send = document.getElementById('lkAssistSend');
+    var close = document.getElementById('lkAssistClose');
+    var restart = document.getElementById('lkAssistRestart');
+    if (!open || !panel || !log || !form || !field || !send || !close || !restart) return;
+
+    var S = C.strings;
+    var SENT_CLAIM = new RegExp(C.sentClaim, 'i');
+    var FOCUSABLE = 'a[href], button:not([disabled]), textarea, input, select';
+
+    var history = [];
+    var waiting = false;
+    var state = freshState();
+    var idleTimer = null;
+    var lastFocused = null;
+
+    function newId() {
+      return Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
+    }
+
+    function freshState() {
+      return {
+        id: newId(),
+        aSent: false,
+        bSent: false,
+        /* How much of the conversation has already been mailed, counted in
+           history entries. The leaving-the-page beacon uses it to avoid sending
+           a second copy of something the workshop already has. */
+        secured: 0,
+        phone: '',
+        email: '',
+        name: '',
+      };
+    }
+
+    /* True while a click on one of this site's own links, or a form submit, is
+       taking the visitor to another page HERE. `pagehide` cannot tell that from
+       leaving altogether, and treating an in-site click as leaving was spending
+       the one send-B this conversation gets on a partial transcript — after
+       which the real summary, the one with the name and the piece of furniture
+       in it, was never mailed at all. */
+    var leavingSite = true;
+
+    function markInternalNavigation() {
+      leavingSite = false;
+      /* If the navigation does not actually happen — a modifier-click, a
+         download, a prevented default — the flag must not stick. */
+      setTimeout(function () {
+        leavingSite = true;
+      }, 2000);
+    }
+
+    /* ---------- deterministic lead detection ----------
+       The visitor decides whether this is an enquiry, by leaving a way to be
+       reached. Nothing the model says, or fails to say, changes that. */
+    function findPhone(text) {
+      var candidates = String(text).match(/(?:\+?\d[\d\s\-()]{5,}\d)/g) || [];
+      for (var i = 0; i < candidates.length; i++) {
+        var digits = candidates[i].replace(/[^\d]/g, '');
+        if (digits.length >= 7) return candidates[i].replace(/\s+/g, ' ').trim();
+      }
+      return '';
+    }
+
+    function findEmail(text) {
+      var hit = String(text).match(/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/);
+      return hit ? hit[0] : '';
+    }
+
+    /* ---------- the transcript, for as long as the errand lasts ---------- */
+    function readStore() {
+      try {
+        var raw = sessionStorage.getItem(C.storageKey);
+        if (!raw) return null;
+        var pack = JSON.parse(raw);
+        if (!pack || !Array.isArray(pack.history) || typeof pack.time !== 'number') return null;
+        if (Date.now() - pack.time > C.lifetimeMs) return null;
+        return pack;
+      } catch (e) {
+        return null;
+      }
+    }
+
+    function save() {
+      try {
+        sessionStorage.setItem(
+          C.storageKey,
+          JSON.stringify({ time: Date.now(), history: history, state: state })
+        );
+      } catch (e) {}
+    }
+
+    /* Both or neither. Clearing only the storage leaves the in-memory array to
+       ride along into the next request — the classic bug in this pattern. */
+    function clearAll() {
+      history = [];
+      state = freshState();
+      try {
+        sessionStorage.removeItem(C.storageKey);
+      } catch (e) {}
+    }
+
+    /* ---------- the queue that outlives the failure ----------
+       localStorage, so an enquiry that could not be posted is still here
+       tomorrow if the visitor closed the tab on it. */
+    function readQueue() {
+      try {
+        var raw = localStorage.getItem(C.queueKey);
+        var list = raw ? JSON.parse(raw) : [];
+        return Array.isArray(list) ? list : [];
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function writeQueue(q) {
+      try {
+        localStorage.setItem(C.queueKey, JSON.stringify(q));
+      } catch (e) {}
+    }
+
+    function queue(body) {
+      var q = readQueue();
+      q.push({ body: body, tries: 0 });
+      writeQueue(q);
+    }
+
+    /* True only on a confirmed 2xx. Everything downstream depends on that. */
+    function post(body) {
+      return fetch(C.formEndpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      }).then(function (res) {
+        if (!res.ok) throw new Error('Web3Forms ' + res.status);
+        return true;
+      });
+    }
+
+    /* The queue is rewritten from the finished list, so one entry succeeding
+       can never delete another that did not. */
+    function drainQueue() {
+      var q = readQueue();
+      if (!q.length) return Promise.resolve();
+      var left = [];
+      return q
+        .reduce(function (chain, entry) {
+          return chain.then(function () {
+            if (entry.tries >= C.maxRetries) {
+              left.push(entry);
+              return;
+            }
+            return post(entry.body).catch(function () {
+              entry.tries = (entry.tries || 0) + 1;
+              left.push(entry);
+            });
+          });
+        }, Promise.resolve())
+        .then(function () {
+          writeQueue(left);
+        });
+    }
+
+    /* ---------- what gets mailed ---------- */
+    function transcript() {
+      var lines = [];
+      for (var i = 0; i < history.length; i++) {
+        lines.push((history[i].role === 'user' ? S.you : S.them) + ': ' + history[i].content);
+      }
+      return lines.join('\n\n');
+    }
+
+    function buildBody(enquiry) {
+      var message = '';
+      if (enquiry) {
+        message += 'SAMMANFATTNING FRÅN ASSISTENTEN\n';
+        message += 'Namn: ' + (enquiry.namn || '') + '\n';
+        message += 'Telefon: ' + (enquiry.telefon || '') + '\n';
+        message += 'E-post: ' + (enquiry.epost || '') + '\n';
+        message += 'Möbel: ' + (enquiry.mobel || '') + '\n';
+        message += 'Arbete: ' + (enquiry.arbete || '') + '\n';
+        message += 'Beskrivning: ' + (enquiry.beskrivning || '') + '\n\n';
+      }
+      /* The whole conversation always travels, tool call or no tool call. The
+         workshop should be able to read what the visitor actually wrote, not
+         only the model's precis of it. */
+      message += 'HELA SAMTALET (' + C.lang.toUpperCase() + ')\n' + transcript();
+
+      var name = String((enquiry && enquiry.namn) || state.name || '');
+      return {
+        access_key: C.formKey,
+        subject: C.subject + ' [' + state.id + ']',
+        from_name: name || 'Larsson Korgmakare',
+        replyto: state.email || C.fallbackEmail,
+        name: name,
+        email: state.email || '',
+        phone: state.phone || '',
+        message: message,
+      };
+    }
+
+    /* Send A: the moment a way to reach the visitor appears, without waiting
+       for the model. Secures the enquiry even if the tab closes a second
+       later. At most once per conversation. */
+    function sendA() {
+      if (state.aSent) return Promise.resolve(false);
+      state.aSent = true;
+      state.secured = history.length;
+      save();
+      var body = buildBody(null);
+      return drainQueue()
+        .then(function () {
+          return post(body);
+        })
+        .then(function () {
+          return true;
+        })
+        .catch(function () {
+          queue(body);
+          return false;
+        });
+    }
+
+    /* Send B: the conversation is complete. At most once per conversation. */
+    function sendB(enquiry) {
+      if (state.bSent || !history.length) return Promise.resolve(false);
+      state.bSent = true;
+      state.secured = history.length;
+      save();
+      var body = buildBody(enquiry || null);
+      return drainQueue()
+        .then(function () {
+          return post(body);
+        })
+        .then(function () {
+          return true;
+        })
+        .catch(function () {
+          queue(body);
+          return false;
+        });
+    }
+
+    /* The page is being left for good: sendBeacon survives the navigation,
+       fetch does not.
+
+       This deliberately does NOT set `bSent`. sendBeacon returns true the moment
+       the browser accepts the request, so a later transport or CORS failure is
+       invisible and the retry queue can never cover this path — which makes it
+       the wrong thing to spend an irreversible guard on. It records how much of
+       the conversation has been mailed instead, so a visitor who leaves and
+       comes back still gets their proper summary sent when the model completes
+       the enquiry, and the workshop threads the two on the conversation id in
+       the subject line. */
+    function sendBOnLeave() {
+      if (!leavingSite) return;
+      if (state.bSent || !history.length || !(state.phone || state.email)) return;
+      /* Nothing has been said since the last thing that was mailed. */
+      if (history.length <= state.secured) return;
+      state.secured = history.length;
+      save();
+      var body = buildBody(null);
+      try {
+        var blob = new Blob([JSON.stringify(body)], { type: 'application/json' });
+        if (!navigator.sendBeacon(C.formEndpoint, blob)) queue(body);
+      } catch (e) {
+        queue(body);
+      }
+    }
+
+    function resetIdle() {
+      if (idleTimer) clearTimeout(idleTimer);
+      idleTimer = setTimeout(function () {
+        if (state.phone || state.email) sendB(null);
+      }, C.idleMs);
+    }
+
+    /* ---------- the truth filter ----------
+       The widget never repeats a claim that something was sent unless it has
+       verified the send itself. Models make the claim regardless. */
+    function filterClaims(text, confirmed) {
+      if (confirmed) return text;
+      var paras = String(text).split(/\n{2,}/);
+      var cleaned = paras.map(function (para) {
+        var sentences = para.split(/(?<=[.!?])\s+/);
+        var keep = sentences.filter(function (sentence) {
+          return !SENT_CLAIM.test(sentence);
+        });
+        if (keep.length === sentences.length) return para;
+        var kept = keep.join(' ').trim();
+        return kept ? kept + ' ' + S.noted : S.noted;
+      });
+      var out = cleaned.join('\n\n').trim();
+      return out || S.noted;
+    }
+
+    /* ---------- rendering. textContent everywhere, without exception. ----------
+       Every entry in the transcript is the same shape — a tracked label and the
+       words under it — so a message, a status and a failure all read as the same
+       kind of thing. That is what replaced the bubbles. */
+    function entry(labelText, bodyText, extraClass) {
+      var wrap = document.createElement('div');
+      wrap.className = 'assist__block' + (extraClass ? ' ' + extraClass : '');
+      if (labelText) {
+        var l = document.createElement('p');
+        l.className = 'assist__label';
+        l.textContent = labelText;
+        wrap.appendChild(l);
+      }
+      if (bodyText) {
+        var b = document.createElement('p');
+        b.className = 'assist__body';
+        b.textContent = bodyText;
+        wrap.appendChild(b);
+      }
+      log.appendChild(wrap);
+      return wrap;
+    }
+
+    function turn(role, text) {
+      return entry(role === 'user' ? S.you : S.them, text, 'assist__turn');
+    }
+
+    /* A status: the workshop writing, an enquiry confirmed, a conversation
+       closed. Label only — there is no body to it. */
+    function systemLine(text) {
+      return entry(text, null, 'assist__block--meta assist__system');
+    }
+
+    /* A failure. Same shape as everything else, deliberately: an error here is
+       information from the workshop, not an alert from a system. */
+    function notice(labelText, bodyText) {
+      return entry(labelText, bodyText, 'assist__block--meta assist__notice');
+    }
+
+    function toBottom() {
+      log.scrollTop = log.scrollHeight;
+    }
+
+    function hideTopics() {
+      var list = document.getElementById('lkAssistTopics');
+      if (list) list.hidden = true;
+    }
+
+    function chooseTopic(question) {
+      if (waiting) return;
+      field.value = question;
+      hideTopics();
+      ask();
+    }
+
+    /* The opening block: a heading, the welcome, and four ways in. The ways in
+       are real <button>s inside a real list — focusable, in the tab order, in
+       the focus trap, and with the same visible focus ring as everything else.
+       They are not clickable text. */
+    function drawWelcome() {
+      var wrap = entry(S.welcome, S.greeting, 'assist__welcome');
+      var list = document.createElement('ul');
+      list.className = 'assist__topics';
+      list.id = 'lkAssistTopics';
+      for (var i = 0; i < S.topics.length; i++) {
+        (function (topic) {
+          var item = document.createElement('li');
+          var btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'assist__topic';
+          btn.textContent = topic.label;
+          var arrow = document.createElement('span');
+          arrow.className = 'assist__arrow';
+          arrow.setAttribute('aria-hidden', 'true');
+          arrow.textContent = '\u2192';
+          btn.appendChild(arrow);
+          btn.addEventListener('click', function () {
+            chooseTopic(topic.question);
+          });
+          item.appendChild(btn);
+          list.appendChild(item);
+        })(S.topics[i]);
+      }
+      wrap.appendChild(list);
+      return wrap;
+    }
+
+    function draw() {
+      log.textContent = '';
+      drawWelcome();
+      for (var i = 0; i < history.length; i++) turn(history[i].role, history[i].content);
+      /* Once the conversation has started the ways in are stale, and leaving
+         them focusable would put four tab stops in front of the field on every
+         subsequent turn. */
+      if (history.length) hideTopics();
+      toBottom();
+    }
+
+    /* ---------- open, close, focus ---------- */
+    function trapTab(e) {
+      if (e.key !== 'Tab') return;
+      var items = Array.prototype.slice.call(panel.querySelectorAll(FOCUSABLE));
+      if (!items.length) return;
+      var first = items[0];
+      var last = items[items.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    }
+
+    function openPanel() {
+      lastFocused = document.activeElement;
+      panel.hidden = false;
+      open.hidden = true;
+
+      /* Storage decides what is on screen. Empty means the conversation was
+         finished, cleared, or has outlived its two hours — in all three cases
+         we start again with the greeting and no explanation. */
+      var pack = readStore();
+      if (!pack || !pack.history.length) {
+        clearAll();
+        log.textContent = '';
+      } else {
+        history = pack.history;
+        if (pack.state) state = pack.state;
+      }
+
+      if (!log.childElementCount) draw();
+      toBottom();
+      field.focus();
+    }
+
+    function closePanel() {
+      panel.hidden = true;
+      open.hidden = false;
+      if (lastFocused && lastFocused.focus && lastFocused !== document.body) lastFocused.focus();
+      else open.focus();
+    }
+
+    function startOver() {
+      var done = state.phone || state.email ? sendB(null) : Promise.resolve(false);
+      done.then(function () {
+        clearAll();
+        log.textContent = '';
+        draw();
+        field.focus();
+      });
+    }
+
+    /* ---------- the exchange ---------- */
+    function ask() {
+      var text = field.value.trim();
+      if (!text || waiting) return;
+
+      history.push({ role: 'user', content: text.slice(0, C.maxChars) });
+
+      /* Deterministic detection, before anything else. */
+      if (!state.phone) state.phone = findPhone(text);
+      if (!state.email) state.email = findEmail(text);
+      save();
+
+      turn('user', text);
+      hideTopics();
+      field.value = '';
+      autogrow();
+      toBottom();
+      resetIdle();
+
+      var confirmed = false;
+      var first =
+        (state.phone || state.email) && !state.aSent
+          ? sendA().then(function (ok) {
+              confirmed = ok;
+              if (ok) {
+                systemLine(S.sent);
+                toBottom();
+              }
+            })
+          : Promise.resolve();
+
+      waiting = true;
+      send.disabled = true;
+      var thinking = systemLine(S.thinking);
+      toBottom();
+
+      first
+        .then(function () {
+          return fetch(C.endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              messages: history.slice(-C.maxHistory),
+              lang: C.lang,
+            }),
+          });
+        })
+        .then(function (res) {
+          /* A refusal from the worker still carries a message meant for the
+             visitor — the rate-limit answer is a 429 with its own `reply`.
+             Throwing on !ok discarded it and showed the generic error instead,
+             so a 4xx/5xx is read for a `reply` first and only then given up on. */
+          return res.json().then(
+            function (data) {
+              if (res.ok) return data;
+              /* A refusal still carries a message meant for the visitor: the
+                 rate-limit answer, and the two validation cases the worker
+                 considers the visitor's to act on. It is shown, but it is NOT
+                 pushed into the history — it is the worker talking, not the
+                 model, and sending it back upstream would make a conversation
+                 that is already too long longer still. */
+              if (data && data.reply) return { reply: String(data.reply), avvisad: true };
+              throw new Error('Status ' + res.status);
+            },
+            function () {
+              throw new Error('Status ' + res.status);
+            }
+          );
+        })
+        .then(function (data) {
+          var reply = data && data.reply ? String(data.reply) : S.error;
+          thinking.remove();
+
+          if (data && data.avvisad) {
+            systemLine(reply);
+            return;
+          }
+
+          history.push({ role: 'assistant', content: reply });
+          save();
+
+          var enquiry =
+            data && data.forfragan && typeof data.forfragan === 'object' ? data.forfragan : null;
+          if (enquiry && enquiry.namn) {
+            state.name = String(enquiry.namn);
+            save();
+          }
+
+          /* Tool called means the conversation is complete. Send B carries the
+             structured summary as well as the whole transcript. */
+          var delivered = state.aSent && confirmed;
+          var finish = enquiry
+            ? sendB(enquiry).then(function (ok) {
+                delivered = ok || delivered;
+              })
+            : Promise.resolve();
+
+          return finish.then(function () {
+            turn('assistant', filterClaims(reply, delivered));
+            if (enquiry) {
+              if (delivered) systemLine(S.sent);
+              systemLine(S.ended);
+              clearAll();
+            }
+          });
+        })
+        .catch(function () {
+          if (thinking.parentNode) thinking.remove();
+          notice(S.errorLabel, S.error);
+        })
+        .then(function () {
+          waiting = false;
+          send.disabled = false;
+          toBottom();
+          field.focus();
+        });
+    }
+
+    open.addEventListener('click', openPanel);
+    close.addEventListener('click', closePanel);
+    restart.addEventListener('click', startOver);
+
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      ask();
+    });
+
+    /* The field is one line until the question needs more, and never more than
+       four. Without this the rule under the row would sit a long way below a
+       short question, which is what it did before. */
+    function autogrow() {
+      field.style.height = 'auto';
+      var lineHeight = parseFloat(getComputedStyle(field).lineHeight) || 22;
+      field.style.height = Math.min(field.scrollHeight, lineHeight * 4) + 'px';
+    }
+
+    field.addEventListener('input', autogrow);
+
+    field.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        ask();
+      }
+    });
+
+    panel.addEventListener('keydown', trapTab);
+
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && !panel.hidden) closePanel();
+    });
+
+    /* Capture phase, so a link that stops propagation is still seen. */
+    document.addEventListener(
+      'click',
+      function (e) {
+        var a = e.target && e.target.closest ? e.target.closest('a[href]') : null;
+        if (!a || a.target === '_blank' || a.hasAttribute('download')) return;
+        var href = a.getAttribute('href') || '';
+        if (href.charAt(0) === '#' || /^(mailto|tel):/i.test(href)) return;
+        if (a.origin === location.origin) markInternalNavigation();
+      },
+      true
+    );
+    document.addEventListener('submit', markInternalNavigation, true);
+
+    window.addEventListener('pagehide', sendBOnLeave);
+
+    var start = readStore();
+    if (start) {
+      history = start.history;
+      if (start.state) state = start.state;
+    }
+    if (history.length) draw();
+    drainQueue();
+  })();
+</script>

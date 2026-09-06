@@ -1,0 +1,126 @@
+---
+import Figure from '../Figure.astro';
+import { prose } from '../../lib/content';
+import type { Lang } from '../../i18n/config';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+
+/**
+ * Text renders straight from the harvested JSON (Swedish) or its exactly
+ * parallel translation (English), so the client's copy cannot drift. The live
+ * page marks every section heading AND the lead sentence as <h4> with no h1
+ * anywhere; that is fixed here — one h1, h2 for sections, and the lead sentence
+ * becomes a lead paragraph, which is what it reads as. No wording changes.
+ *
+ * TODO(client): paragraph 3 says "Svensk Tenn" where the next sentence writes
+ * "Svenskt Tenn" correctly — a fourth content error alongside Soffa 258, the
+ * Stol 230 references and National Museeum. Carried over verbatim in both
+ * languages; correcting it is the client's call.
+ */
+const t = prose('om-oss', lang);
+const heading = t[0].lines[0];
+const lead = t[1].lines[0];
+const historyHeading = t[2].lines[0];
+const history = t.slice(3, 9);
+const workHeading = t[9].lines[0];
+const work = t.slice(10);
+
+/** Bare URLs in the membership paragraph, made into real links in place. */
+const LINKS: Record<string, string> = {
+  'www.skrahantverkarna.com': 'https://www.skrahantverkarna.com',
+  'www.hantverkarna.se': 'https://www.hantverkarna.se',
+  /* www.hantverksvandringar.se is deliberately absent: the domain is dead and
+     now serves a parking page. The client's sentence still reads exactly as
+     published — the address is simply not turned into a link. */
+};
+const linkify = (line: string) =>
+  line
+    .split(/(www\.[a-z]+\.(?:com|se))/g)
+    .map((part) => (LINKS[part] ? { href: LINKS[part], text: part } : { text: part }));
+---
+
+<div class="wrap wrap--narrow">
+  <h1>{heading}</h1>
+  <p class="lead">{lead}</p>
+
+  <div class="photos">
+    <Figure file="Erica1.jpg" sizes="(min-width: 700px) 250px, 90vw" variant="thumb" lightbox lang={lang} />
+    <Figure
+      file="JakobsbergsgatanElin.jpg"
+      sizes="(min-width: 700px) 250px, 90vw"
+      variant="thumb"
+      lightbox
+      lang={lang}
+    />
+    <Figure file="Verktyg.jpg" sizes="(min-width: 700px) 250px, 90vw" variant="thumb" lightbox lang={lang} />
+  </div>
+
+  <h2>{historyHeading}</h2>
+  {history.map((b) => <p>{b.lines.join(' ')}</p>)}
+
+  <Figure
+    file="verkstad.jpg"
+    sizes="(min-width: 851px) 788px, 90vw"
+    variant="content"
+    lightbox
+    class="photo-wide"
+    lang={lang}
+  />
+
+  <h2>{workHeading}</h2>
+  {
+    work.map((b) => (
+      <p>
+        {b.lines.map((line, i) => (
+          <>
+            {i > 0 && <br />}
+            {linkify(line).map((seg) =>
+              seg.href ? (
+                <a href={seg.href} rel="noopener">
+                  {seg.text}
+                </a>
+              ) : (
+                seg.text
+              )
+            )}
+          </>
+        ))}
+      </p>
+    ))
+  }
+</div>
+
+<style>
+  .lead {
+    font-size: var(--fs-heading);
+    line-height: var(--lh-heading);
+    max-width: 55ch;
+    margin-bottom: var(--space-5);
+  }
+
+  .photos {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-4);
+    margin-bottom: var(--space-6);
+  }
+
+  @media (min-width: 700px) {
+    .photos {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  .photos :global(img) {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+  }
+
+  :global(.photo-wide) {
+    margin-block: var(--space-5);
+  }
+</style>

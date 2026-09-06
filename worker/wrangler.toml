@@ -1,0 +1,28 @@
+name = "larsson-korgmakare-assistent"
+main = "index.js"
+# Pinned deliberately. This decides runtime semantics, so move it only when you
+# have read what changed between the two dates — never as a side effect of a
+# redeploy, and never by setting it to "today".
+compatibility_date = "2026-09-05"
+
+# Rate-limit counters. The worker still runs without this binding — it falls
+# back to an in-isolate counter and logs that it did — but the fallback is
+# genuinely weaker, because Cloudflare may run many isolates, and it saturates:
+# an isolate that has served DAG_TAK requests refuses everyone for the rest of
+# the UTC day. Created 2026-09-05.
+[[kv_namespaces]]
+binding = "RATE"
+id = "2e179e91259b4423a943cd4435656860"
+
+[vars]
+# Opens the two localhost origins (4321, 8000) IN ADDITION to the three
+# production ones. The site is not published, so localhost is the only origin
+# that can reach this worker today and the demo would not work without it.
+#
+# TODO(launch): REMOVE THIS LINE before the demo is shown from a real host. A
+# page served from localhost on ANY machine in the world can drive this worker
+# and spend the Anthropic key while it is set.
+TILLAT_LOKALT = "1"
+
+# The Anthropic key is a SECRET, never a var, and never in this file:
+#   npx wrangler secret put ANTHROPIC_API_KEY

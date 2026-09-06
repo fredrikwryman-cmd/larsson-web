@@ -1,0 +1,59 @@
+---
+import Carousel from '../Carousel.astro';
+import { prose, images } from '../../lib/content';
+import { PAGE_PATHS, withBase, type Lang } from '../../i18n/config';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+
+const t = prose('svenskt-tenn', lang);
+const photos = images('svenskt-tenn');
+
+const heading = t[0].lines[0];
+const moreLabel = t[1].lines[0];
+
+/**
+ * The live page puts these four photographs in a Flickity carousel and then
+ * prints all the text underneath, so nothing tells a reader which credit
+ * belongs to which picture. The carousel shape is preserved; the pairing is the
+ * fix. Slide 4 genuinely has no credit line in the source, so it carries none.
+ */
+const slides = [
+  { file: photos[0].file, caption: t[2].lines.join(' ') },
+  { file: photos[1].file, caption: t[3].lines.join(' ') },
+  { file: photos[2].file, caption: t[4].lines.join(' ') },
+  { file: photos[3].file },
+];
+
+const history = t[5].lines.join(' ');
+const backLabel = t[6].lines[0];
+---
+
+<div class="wrap wrap--narrow">
+  <h1>{heading}</h1>
+  <p>
+    <a
+      href="https://www.svenskttenn.se/sv/sortiment/mobler/fatoljer/fatolj-311/100206/"
+      rel="noopener">{moreLabel}</a
+    >
+  </p>
+
+  <Carousel
+    slides={slides}
+    label={heading}
+    sizes="(min-width: 851px) 788px, 92vw"
+    lang={lang}
+  />
+
+  <p class="st-history">{history}</p>
+
+  <p><a href={withBase(PAGE_PATHS.commissions[lang])}>{backLabel}</a></p>
+</div>
+
+<style>
+  .st-history {
+    margin-block: var(--space-5);
+  }
+</style>

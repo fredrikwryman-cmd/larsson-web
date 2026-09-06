@@ -1,0 +1,386 @@
+---
+import '../styles/tokens.css';
+/* The optional @font-face slot. astro.config.mjs aliases this to the Gravur
+   block when FONT=gravur and to an empty file otherwise, so a licensed build
+   never references an unlicensed font file. */
+import 'virtual:optional-font-face';
+import '../styles/global.css';
+import { company } from '../data/company';
+import SiteNav from '../components/SiteNav.astro';
+import SiteFooter from '../components/SiteFooter.astro';
+import Lightbox from '../components/Lightbox.astro';
+import Assistant from '../components/Assistant.astro';
+import { Image, getImage as astroGetImage } from 'astro:assets';
+import logo from '../assets/LK-160x160.png';
+import wordmarkImg from '../assets/Logo-300px_2_Rityta-1.png';
+import { getImage as getAsset } from '../lib/images';
+import { withBase, otherLang, type Lang } from '../i18n/config';
+import { t } from '../i18n/ui';
+
+interface Props {
+  /** Page language. Drives <html lang>, every UI string and the hreflang pair. */
+  lang: Lang;
+  /** Site-relative path of this same page in the OTHER language. Required — it
+   *  is what makes the hreflang pair reciprocal. */
+  altPath: string;
+  /** Page title without the site-name suffix. Must be unique per page. */
+  title: string;
+  /** Meta description in this page's language. Required — never templated. */
+  description: string;
+  /** Open Graph image, given as a harvested filename. Falls back site-wide. */
+  ogImageFile?: string;
+  /** Extra JSON-LD emitted alongside the site-wide LocalBusiness graph. */
+  structuredData?: Record<string, unknown>;
+  /**
+   * The 404. Suppresses the canonical, the hreflang set and the breadcrumb
+   * graph: none of them describe a real resource, and a canonical pointing at
+   * a URL that returns 404 is worse than none at all.
+   */
+  isErrorPage?: boolean;
+  /** Trail above the page title, excluding Home (added here) and this page. */
+  breadcrumbs?: { label: string; href: string }[];
+}
+
+const {
+  lang,
+  altPath,
+  title,
+  description,
+  ogImageFile,
+  structuredData,
+  isErrorPage = false,
+  breadcrumbs = [],
+} = Astro.props;
+
+const s = t(lang);
+const other = otherLang(lang);
+
+const canonical = new URL(Astro.url.pathname, Astro.site).href;
+const altHref = new URL(withBase(altPath), Astro.site).href;
+const svHref = lang === 'sv' ? canonical : altHref;
+const enHref = lang === 'en' ? canonical : altHref;
+
+/**
+ * Open Graph image.
+ *
+ * There is a site-wide fallback because there has to be one: seven pages were
+ * shipping with no og:image at all, and two of them were the Swedish and
+ * English HOME PAGES — the URL most likely to be pasted into a chat. A link to
+ * this site rendered as a bare grey card. The others were the contact and
+ * thank-you pages and the 404.
+ *
+ * The workshop interior is the fallback: it is the one photograph that says
+ * what this business is without naming a single model.
+ */
+const OG_FALLBACK = 'verkstad.jpg';
+const optimisedOg = await astroGetImage({
+  src: getAsset(ogImageFile ?? OG_FALLBACK),
+  width: 1200,
+  format: 'jpeg',
+});
+const ogImageUrl = new URL(optimisedOg.src, Astro.site).href;
+
+/**
+ * LocalBusiness graph, built from company.ts. Nothing here is hardcoded.
+ *
+ * `openingHoursSpecification` is deliberately ABSENT rather than empty: the
+ * client has never published opening hours anywhere, and an empty or invented
+ * property is worse than no property.
+ */
+const localBusiness: Record<string, unknown> = {
+  '@context': 'https://schema.org',
+  '@type': 'LocalBusiness',
+  '@id': new URL('/', Astro.site).href + '#business',
+  name: company.legalName,
+  alternateName: company.name,
+  url: new URL('/', Astro.site).href,
+  telephone: company.phone.display,
+  email: company.email,
+  foundingDate: String(company.founded),
+  sameAs: [company.instagram.url],
+  address: {
+    '@type': 'PostalAddress',
+    streetAddress: company.address.street,
+    postalCode: company.address.postalCode,
+    addressLocality: company.address.city,
+    addressCountry: 'SE',
+  },
+  description,
+};
+
+if (company.openingHours.length > 0) {
+  localBusiness.openingHoursSpecification = company.openingHours
+    .filter((h) => h.hours)
+    .map((h) => ({ '@type': 'OpeningHoursSpecification', dayOfWeek: h.day, description: h.hours }));
+}
+
+/**
+ * Breadcrumb graph: Home > …trail… > this page.
+ *
+ * Omitted on the home page itself and on the 404. On the home page the trail
+ * and the destination are the same URL, so the graph listed the home page twice
+ * — at position 1 as "Hem" and at position 2 under the page's SEO title — which
+ * is a malformed BreadcrumbList, not a one-item one.
+ */
+const homeHref = new URL(withBase(lang === 'sv' ? '/' : '/en/'), Astro.site).href;
+const isHome = canonical === homeHref;
+const crumbTrail = [{ label: s.home, href: withBase(lang === 'sv' ? '/' : '/en/') }, ...breadcrumbs];
+const breadcrumbLd = isHome || isErrorPage ? null : {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    ...crumbTrail.map((c, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      name: c.label,
+      item: new URL(c.href, Astro.site).href,
+    })),
+    {
+      '@type': 'ListItem',
+      position: crumbTrail.length + 1,
+      name: title,
+      item: canonical,
+    },
+  ],
+};
+---
+
+<!doctype html>
+<html lang={lang} data-font={import.meta.env.PUBLIC_FONT ?? 'archivo'} style="color-scheme: light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <!--
+      TODO(launch): REMOVE THIS NOINDEX BEFORE GOING LIVE.
+      Demo on a domain the client does not own; must not be indexable.
+      Two things enforce it and BOTH must go at launch:
+        1. this meta tag
+        2. the `Disallow: /` in public/robots.txt
+    -->
+    <meta name="robots" content="noindex, nofollow" />
+
+    <title>{title} – {company.name}</title>
+    <meta name="description" content={description} />
+    {!isErrorPage && <link rel="canonical" href={canonical} />}
+
+    {/* Reciprocal pair, plus Swedish as x-default — it is the original site. */}
+    {
+      !isErrorPage && (
+        <>
+          <link rel="alternate" hreflang="sv" href={svHref} />
+          <link rel="alternate" hreflang="en" href={enHref} />
+          <link rel="alternate" hreflang="x-default" href={svHref} />
+        </>
+      )
+    }
+
+    {/*
+      WITHOUT JAVASCRIPT.
+
+      The hamburger is a JS control: with scripting off it is a visible button
+      that does nothing, and below 851px it was the ONLY route to the rest of
+      the site — and the only place the English link exists at all, so a no-JS
+      phone visitor could not reach the English site by any path.
+
+      Everything needed is already in the DOM. This shows the written-out
+      navigation and the language switch at every width and hides the dead
+      control. It also un-fixes the assistant's corner: with JS off that
+      container holds the <noscript> panel, which is 358x178 and was sitting
+      over the bottom fifth of every page with no way to dismiss it.
+    */}
+    <noscript>
+      <style>
+        .nav-toggle { display: none !important; }
+        .desknav { display: block !important; }
+        .desknav ul { flex-wrap: wrap; }
+        .langswitch { display: block !important; }
+        .assist { position: static !important; }
+      </style>
+    </noscript>
+
+    <link rel="icon" href={withBase('/favicon.svg')} type="image/svg+xml" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={company.name} />
+    <meta property="og:locale" content={lang === 'sv' ? 'sv_SE' : 'en_GB'} />
+    <meta property="og:locale:alternate" content={other === 'sv' ? 'sv_SE' : 'en_GB'} />
+    <meta property="og:title" content={`${title} – ${company.name}`} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    {ogImageUrl && <meta property="og:image" content={ogImageUrl} />}
+
+    <meta name="twitter:card" content={ogImageUrl ? 'summary_large_image' : 'summary'} />
+    <meta name="twitter:title" content={`${title} – ${company.name}`} />
+    <meta name="twitter:description" content={description} />
+    {ogImageUrl && <meta name="twitter:image" content={ogImageUrl} />}
+
+    <script type="application/ld+json" set:html={JSON.stringify(localBusiness)} is:inline />
+    {
+      breadcrumbLd && (
+        <script type="application/ld+json" set:html={JSON.stringify(breadcrumbLd)} is:inline />
+      )
+    }
+    {
+      structuredData && (
+        <script type="application/ld+json" set:html={JSON.stringify(structuredData)} is:inline />
+      )
+    }
+  </head>
+
+  <body>
+    <a class="skip-link" href="#main">{s.skipToContent}</a>
+
+    <header class="site-header">
+      <a class="site-header__logo" href={withBase(lang === 'sv' ? '/' : '/en/')}>
+        <Image src={logo} alt={company.name} width={80} height={80} densities={[1, 2]} loading="eager" />
+      </a>
+
+      <p class="site-header__wordmark">
+        {/*
+          The wordmark is the client's own logo artwork, exactly as the live
+          site uses it — a fixed composition that cannot reflow.
+
+          alt="" because it is decorative: the circular monogram beside it is
+          the link home and already carries the company name as its link text,
+          and the page's own <h1> is the heading a reader and a search engine
+          should get. An alt here would put the company name in front of every
+          page's real title.
+
+          DELIBERATE DEPARTURE FROM THE ORIGINAL, on the client's instruction.
+          The live site prints this artwork on the home page only — verified in
+          the phase-1 archive, where Logo-300px appears in 1 of 22 pages. The
+          company name is now present wherever a visitor lands.
+        */}
+        <Image
+          src={wordmarkImg}
+          alt=""
+          widths={[264, 344, 398, 688, 796]}
+          sizes="(min-width: 1100px) 344px, (min-width: 700px) 398px, 68vw"
+          loading="eager"
+        />
+      </p>
+
+      <SiteNav lang={lang} altPath={altPath} />
+    </header>
+
+    {
+      breadcrumbs.length > 0 && (
+        <nav class="crumbs wrap" aria-label={s.breadcrumb}>
+          <ol>
+            {crumbTrail.map((c) => (
+              <li>
+                <a href={c.href}>{c.label}</a>
+              </li>
+            ))}
+            <li aria-current="page">{title}</li>
+          </ol>
+        </nav>
+      )
+    }
+
+    {/*
+      tabindex="-1" is what makes the skip link actually work. Without it,
+      Chromium moves the sequential-focus starting point on a fragment
+      navigation and appears to behave, while Safari and older engines do not
+      move focus at all — the link scrolls and nothing else, which is the
+      failure mode the skip link exists to prevent.
+    */}
+    <main id="main" tabindex="-1">
+      <slot />
+    </main>
+
+    <SiteFooter lang={lang} />
+
+    {/* Included on every page; its script exits immediately when the page has
+        no [data-lightbox] triggers, so it costs nothing where unused. */}
+    <Lightbox lang={lang} />
+    <Assistant lang={lang} />
+
+    <style>
+      .site-header {
+        display: grid;
+        grid-template-columns: 80px minmax(0, 1fr) 80px;
+        grid-template-areas:
+          'logo spacer nav'
+          'wordmark wordmark wordmark'
+          'desknav desknav desknav';
+        align-items: start;
+        gap: var(--space-3);
+        /* Live logo sits 30px from the edge at 390 and 834. */
+        padding: var(--space-4) 30px 0;
+      }
+
+      .site-header__logo {
+        grid-area: logo;
+        display: block;
+        width: 80px;
+      }
+
+      /* Measured on the live site: the wordmark is horizontally centred at
+         every width, and at 390px it sits on its OWN ROW below the logo. */
+      .site-header__wordmark {
+        grid-area: wordmark;
+        justify-self: center;
+        margin: var(--space-3) 0 0;
+      }
+
+      .site-header__wordmark :global(img) {
+        /* Live widths: 264px @390, 398.3px @834, 343.9px @1440. The original
+           theme sizes this non-monotonically — wider at 834 than at 1440 — so
+           one formula cannot hit all three. Two rules reproduce the measured
+           values. */
+        width: min(68vw, 344px);
+        height: auto;
+      }
+
+      @media (min-width: 700px) and (max-width: 1100px) {
+        .site-header__wordmark :global(img) {
+          width: min(48vw, 398px);
+        }
+      }
+
+      @media (min-width: 700px) {
+        .site-header {
+          grid-template-areas:
+            'logo wordmark nav'
+            'desknav desknav desknav';
+        }
+
+        .site-header__wordmark {
+          margin-top: 0;
+        }
+      }
+
+      /* From the site's one real breakpoint the written-out navigation appears
+         and the hamburger goes away; the third column carries the language
+         switch instead. */
+      @media (min-width: 851px) {
+        .site-header {
+          grid-template-areas:
+            'logo wordmark lang'
+            'desknav desknav desknav';
+        }
+      }
+
+      .crumbs {
+        margin-top: var(--space-4);
+        font-size: var(--fs-form);
+      }
+
+      .crumbs ol {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-2);
+      }
+
+      .crumbs li + li::before {
+        content: '/';
+        margin-right: var(--space-2);
+      }
+    </style>
+  </body>
+</html>

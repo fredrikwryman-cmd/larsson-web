@@ -1,0 +1,99 @@
+---
+import { Image } from 'astro:assets';
+import { getImage, getAlt, CONTENT_WIDTHS, THUMB_WIDTHS } from '../lib/images';
+import type { Lang } from '../i18n/config';
+import { t } from '../i18n/ui';
+
+interface Props {
+  /** Original WordPress filename, e.g. "230_27193-1x1.jpg". */
+  file: string;
+  /**
+   * Override the approved alt text. Pass `""` explicitly for a decorative
+   * image; omit it to use the draft from alt-drafts.md.
+   */
+  alt?: string;
+  /**
+   * The `sizes` attribute. REQUIRED and there is a reason.
+   *
+   * The live site ships WordPress's default `(max-width:1181px) 100vw, 1181px`
+   * on every content image, so at 1440px each /press/ thumbnail renders into a
+   * 171px slot while downloading the full 1181x1181 original — roughly 10 MB
+   * for one grid. Every call site must state the real rendered width.
+   */
+  sizes: string;
+  /** "thumb" for grid cards, "content" for large images. */
+  variant?: 'thumb' | 'content';
+  /** Opt this image into the lightbox. */
+  lightbox?: boolean;
+  loading?: 'lazy' | 'eager';
+  class?: string;
+  /** Selects the alt-text draft. Defaults to Swedish. */
+  /**
+   * REQUIRED, and deliberately so. This used to be optional with a Swedish
+   * default, which meant every English page that forgot it silently rendered
+   * Swedish alt text and a Swedish "Förstora bilden" label — a valid value, so
+   * nothing errored, and a visually-hidden string, so nothing showed in a
+   * screenshot. It shipped twice that way. A required prop makes the compiler
+   * catch the next one.
+   */
+  lang: Lang;
+}
+
+const {
+  file,
+  alt,
+  sizes,
+  variant = 'content',
+  lightbox = false,
+  loading = 'lazy',
+  class: className,
+  lang,
+} = Astro.props;
+
+const s = t(lang);
+const src = getImage(file);
+const resolvedAlt = alt !== undefined ? alt : (getAlt(file, lang) ?? '');
+const widths = variant === 'thumb' ? THUMB_WIDTHS : CONTENT_WIDTHS;
+// Never ask Astro for a rendition larger than the source.
+const safeWidths = widths.filter((w) => w <= src.width);
+if (safeWidths.length === 0) safeWidths.push(src.width);
+---
+
+{
+  lightbox ? (
+    <button
+      type="button"
+      class:list={['figure-zoom', className]}
+      data-lightbox
+      data-full={src.src}
+      data-alt={resolvedAlt}
+      data-width={src.width}
+      data-height={src.height}
+    >
+      <Image src={src} alt={resolvedAlt} widths={safeWidths} sizes={sizes} loading={loading} />
+      <span class="visually-hidden">{s.enlarge}</span>
+    </button>
+  ) : (
+    <Image
+      src={src}
+      alt={resolvedAlt}
+      widths={safeWidths}
+      sizes={sizes}
+      loading={loading}
+      class={className}
+    />
+  )
+}
+
+<style>
+  /* A real <button> so the lightbox is keyboard-reachable — on the live site
+     images carry no handler at all and cursor is `auto`. */
+  .figure-zoom {
+    display: block;
+    width: 100%;
+    padding: 0;
+    border: 0;
+    background: none;
+    cursor: zoom-in;
+  }
+</style>

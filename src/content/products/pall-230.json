@@ -1,0 +1,30 @@
+{
+  "slug": "pall-230",
+  "name": "Pall 230",
+  "designer": "John Larsson",
+  "year": "1940-tal",
+  "client": null,
+  "material": "miljövänligt producerad rotting",
+  "dimensions": {
+    "height_mm": 330,
+    "depth_mm": null,
+    "width_mm": 360,
+    "seat_height_mm": null
+  },
+  "dimensions_raw": "Höjd: 330 mm | Längd: 480 mm | Bredd: 360 mm | Pall 230 kan även måttbeställas.",
+  "dimensions_extra": {
+    "Längd": "480 mm"
+  },
+  "care": "Rengöres med mjuk trasa fuktad med såpvatten. Eftertorka. Skydda möbeln mot långvarig fukt, i trädgård, på terrass eller balkong.",
+  "body_text": "Pall 230\nFormgiven av John Larsson (1940-tal)\nBeställ här…\nPall 230 av John Larsson (1940-tal) ritades ursprungligen som fotpall till Stol 230, den populära stol som beställdes av Centralbadet i Stockholm. Larsson korgmakare tillverkar den som solitär pall, men den kan även måttbeställas.\nMaterial: miljövänligt producerad rotting\nHöjd: 330 mm\nLängd: 480 mm\nBredd: 360 mm\nPall 230 kan även måttbeställas.\nRengöres med mjuk trasa fuktad med såpvatten. Eftertorka. Skydda möbeln mot långvarig fukt, i trädgård, på terrass eller balkong.\nTillbaka…",
+  "description": "Pall 230 av John Larsson (1940-tal) ritades ursprungligen som fotpall till Stol 230, den populära stol som beställdes av Centralbadet i Stockholm. Larsson korgmakare tillverkar den som solitär pall, men den kan även måttbeställas.",
+  "category_slug": "formgiven-av-john-larsson",
+  "images": [
+    {
+      "url": "https://larssonkorgmakare.se/wp-content/uploads/2019/01/230pall_27244-1x1.jpg",
+      "alt": null,
+      "file": "230pall_27244-1x1.jpg"
+    }
+  ],
+  "source_url": "https://larssonkorgmakare.se/portfolios/pall-230/"
+}

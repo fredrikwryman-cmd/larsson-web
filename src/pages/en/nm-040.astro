@@ -1,0 +1,31 @@
+---
+import Base from '../../layouts/Base.astro';
+import CasePage from '../../components/CasePage.astro';
+import { PAGE_PATHS, withBase, type Lang } from '../../i18n/config';
+import { pageMeta } from '../../i18n/meta';
+import { t } from '../../i18n/ui';
+
+const lang: Lang = 'en';
+const meta = pageMeta.nm040.en;
+const breadcrumbs = [
+  { label: t(lang).nav.commissions, href: withBase(PAGE_PATHS.commissions[lang]) },
+];
+---
+
+<Base
+  lang={lang}
+  altPath={PAGE_PATHS.nm040.sv}
+  title={meta.title}
+  description={meta.description}
+  ogImageFile="NM_MK.jpg"
+  breadcrumbs={breadcrumbs}
+>
+  {/*
+    The client's own page links to https://www.mattiklenell.com/NM-040-Larsson-Korgmakare-2018,
+    which now answers 404 (checked 2026-09-06). The designer's page moved to the
+    URL below, which answers 200 and is the one /press/ already uses. The dead URL
+    is left verbatim in src/data/page-content.json, which is the archive of what
+    the client published; this is our rendered link, and it works.
+  */}
+  <CasePage slug="nm-040" externalHref="https://mattiklenell.com/NM-040-Larsson-Korgmakare" lang={lang} />
+</Base>

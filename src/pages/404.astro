@@ -1,0 +1,47 @@
+---
+import Base from '../layouts/Base.astro';
+import { PAGE_PATHS, withBase } from '../i18n/config';
+import { notFoundMeta } from '../i18n/meta';
+import { t } from '../i18n/ui';
+
+/* Astro emits a single 404 for the whole site, so this one page carries both
+   languages: the Swedish first, then the English below a rule. */
+const sv = t('sv');
+const en = t('en');
+---
+
+<Base
+  lang="sv"
+  altPath={PAGE_PATHS.home.en}
+  title={notFoundMeta.sv.title}
+  description={notFoundMeta.sv.description}
+  isErrorPage
+>
+  <div class="wrap wrap--narrow">
+    <h1>{sv.notFoundHeading}</h1>
+    <p>{sv.notFoundBody}</p>
+    <ul>
+      <li><a href={withBase(PAGE_PATHS.products.sv)}>{sv.nav.products}</a> — {sv.notFoundProducts}</li>
+      <li><a href={withBase(PAGE_PATHS.repairs.sv)}>{sv.nav.repairs}</a> — {sv.notFoundRepairs}</li>
+      <li><a href={withBase(PAGE_PATHS.contact.sv)}>{sv.nav.contact}</a> — {sv.notFoundContact}</li>
+    </ul>
+
+    <section class="en" lang="en">
+      <h2>{en.notFoundHeading}</h2>
+      <p>{en.notFoundBody}</p>
+      <ul>
+        <li><a href={withBase(PAGE_PATHS.products.en)}>{en.nav.products}</a> — {en.notFoundProducts}</li>
+        <li><a href={withBase(PAGE_PATHS.repairs.en)}>{en.nav.repairs}</a> — {en.notFoundRepairs}</li>
+        <li><a href={withBase(PAGE_PATHS.contact.en)}>{en.nav.contact}</a> — {en.notFoundContact}</li>
+      </ul>
+    </section>
+  </div>
+</Base>
+
+<style>
+  .en {
+    margin-top: var(--space-6);
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--color-text);
+  }
+</style>

@@ -1,0 +1,20 @@
+---
+import Base from '../../layouts/Base.astro';
+import Page from '../../components/pages/Commissions.astro';
+import { PAGE_PATHS, withBase, type Lang } from '../../i18n/config';
+import { pageMeta } from '../../i18n/meta';
+import { t } from '../../i18n/ui';
+
+const lang: Lang = 'en';
+const meta = pageMeta.commissions.en;
+---
+
+<Base
+  lang={lang}
+  altPath={PAGE_PATHS.commissions.sv}
+  title={meta.title}
+  description={meta.description}
+  ogImageFile="NM_MK.jpg"
+>
+  <Page lang={lang} />
+</Base>

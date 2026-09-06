@@ -1,0 +1,127 @@
+---
+import Figure from '../Figure.astro';
+import { prose } from '../../lib/content';
+import { PAGE_PATHS, withBase, type Lang } from '../../i18n/config';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+
+const t = prose('uppdrag', lang);
+const heading = t[0].lines[0];
+const lead = t[1].lines[0];
+
+/**
+ * The three client cases. Each h5 name / h6 designer pair in the source is
+ * duplicated as a bare <a> immediately after it; rendering the pair once as a
+ * single linked card removes that duplication without changing any wording.
+ */
+const cases = [
+  { file: 'NM_MK.jpg', name: t[2].lines[0], designer: t[3].lines[0], key: 'nm040' as const },
+  { file: 'akes_csa.jpg', name: t[4].lines[0], designer: t[5].lines[0], key: 'akes' as const },
+  {
+    file: 'svenskt_tenn_miljo_mobler_50-1882928768-rszww1500h1500-83.jpg',
+    name: t[6].lines[0],
+    designer: t[7].lines[0],
+    key: 'svensktTenn' as const,
+  },
+];
+
+const otherHeading = t[8].lines[0];
+const others = [
+  { h: t[9].lines[0], p: t[10].lines.join(' ') },
+  { h: t[11].lines[0], p: t[12].lines.join(' ') },
+  { h: t[13].lines[0], p: t[14].lines.join(' ') },
+  { h: t[15].lines[0], p: t[16].lines.join(' ') },
+];
+---
+
+<div class="wrap">
+  <h1>{heading}</h1>
+  <p class="lead">{lead}</p>
+
+  <ul class="cases">
+    {
+      cases.map((c, i) => (
+        <li>
+          <a class="cases__link" href={withBase(PAGE_PATHS[c.key][lang])}>
+            <Figure
+              file={c.file}
+              alt=""
+              variant="thumb"
+              sizes="(min-width: 992px) 366px, (min-width: 576px) 45vw, 90vw"
+              loading={i === 0 ? 'eager' : 'lazy'}
+              lang={lang}
+            />
+            <h2 class="cases__name">{c.name}</h2>
+            <p class="cases__designer">{c.designer}</p>
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+
+  <section class="others" aria-labelledby="others-heading">
+    <h2 id="others-heading">{otherHeading}</h2>
+    {
+      others.map((o) => (
+        <div class="others__item">
+          <h3>{o.h}</h3>
+          <p>{o.p}</p>
+        </div>
+      ))
+    }
+  </section>
+</div>
+
+<style>
+  .lead {
+    max-width: 60ch;
+    margin-bottom: var(--space-5);
+  }
+
+  .cases {
+    list-style: none;
+    margin: 0 0 var(--space-6);
+    padding: 0;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--grid-gutter);
+  }
+
+  @media (min-width: 576px) {
+    .cases {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  .cases :global(img) {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+  }
+
+  .cases__name {
+    font-size: var(--fs-heading);
+    margin: var(--space-3) 0 var(--space-1);
+  }
+
+  .cases__designer {
+    margin: 0;
+    font-size: var(--fs-nav);
+  }
+
+  .others {
+    max-width: 62ch;
+  }
+
+  .others__item {
+    margin-bottom: var(--space-4);
+  }
+
+  .others h3 {
+    font-size: var(--fs-heading);
+    margin-bottom: var(--space-1);
+  }
+</style>

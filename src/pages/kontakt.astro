@@ -1,0 +1,19 @@
+---
+import Base from '../layouts/Base.astro';
+import Page from '../components/pages/ContactPage.astro';
+import { PAGE_PATHS, withBase, type Lang } from '../i18n/config';
+import { pageMeta } from '../i18n/meta';
+import { t } from '../i18n/ui';
+
+const lang: Lang = 'sv';
+const meta = pageMeta.contact.sv;
+---
+
+<Base
+  lang={lang}
+  altPath={PAGE_PATHS.contact.en}
+  title={meta.title}
+  description={meta.description}
+>
+  <Page lang={lang} />
+</Base>

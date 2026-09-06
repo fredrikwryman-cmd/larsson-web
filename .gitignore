@@ -1,0 +1,38 @@
+# build output
+dist/
+# generated types
+.astro/
+
+# dependencies
+node_modules/
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+
+# environment variables
+.env
+.env.production
+
+# macOS-specific files
+.DS_Store
+
+# jetbrains setting folder
+.idea/
+
+# ---------------------------------------------------------------------------
+# UNLICENSED FONTS — MUST NEVER BE COMMITTED.
+#
+# Gravur is the typeface the live WordPress site uses. It is commercial and we
+# hold no licence for it. The files below exist only so the local demo can be
+# shown in the original typeface. They must not enter the repo, the published
+# build output, or any deployed artefact.
+#
+# Archivo (OFL) is the licensed substitute and is the default. See
+# src/assets/fonts/gravur/README.md.
+# ---------------------------------------------------------------------------
+src/assets/fonts/gravur/*.woff
+src/assets/fonts/gravur/*.woff2

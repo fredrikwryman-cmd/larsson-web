@@ -1,0 +1,70 @@
+---
+import Figure from './Figure.astro';
+import { prose, images } from '../lib/content';
+import { PAGE_PATHS, withBase, type Lang } from '../i18n/config';
+
+interface Props {
+  /** Harvest slug — "nm-040" or "akes". */
+  slug: string;
+  /** External URL for the "Mer information hos …" link. */
+  externalHref: string;
+  lang: Lang;
+}
+
+const { slug, externalHref, lang } = Astro.props;
+
+const t = prose(slug, lang);
+const heading = t[0].lines[0];
+const moreLabel = t[1].lines[0];
+const credit = t[2].lines.join(' ');
+const backLabel = t[3].lines[0];
+const photo = images(slug)[0];
+---
+
+{/*
+  TODO(client): the heading below reads "National Museeum", which is wrong twice
+  over — the museum is one word in Swedish (Nationalmuseum) and "Museeum" is
+  misspelt. The /uppdrag/ page that links here spells it correctly. Left exactly
+  as published in both languages; correcting it is the client's call.
+*/}
+<div class="wrap case">
+  <div class="case__media">
+    <Figure
+      file={photo.file}
+      variant="content"
+      sizes="(min-width: 851px) 561px, 92vw"
+      lightbox
+      loading="eager"
+      lang={lang}
+    />
+  </div>
+
+  <div class="case__text">
+    <h1>{heading}</h1>
+    <p><a href={externalHref} rel="noopener">{moreLabel}</a></p>
+    <p>{credit}</p>
+    <p><a href={withBase(PAGE_PATHS.commissions[lang])}>{backLabel}</a></p>
+  </div>
+</div>
+
+<style>
+  .case {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-5);
+    align-items: start;
+  }
+
+  @media (min-width: 851px) {
+    .case {
+      grid-template-columns: 1fr 1fr;
+      /* Same ~23px gutter the live two-column pages use. */
+      gap: var(--grid-gutter);
+    }
+  }
+
+  .case__media :global(img) {
+    width: 100%;
+    height: auto;
+  }
+</style>

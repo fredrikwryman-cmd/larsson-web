@@ -1,0 +1,23 @@
+---
+import Base from '../../layouts/Base.astro';
+import Page from '../../components/pages/Repairs.astro';
+import { PAGE_PATHS, withBase, type Lang } from '../../i18n/config';
+import { pageMeta } from '../../i18n/meta';
+import { t } from '../../i18n/ui';
+import { faqFor } from '../../lib/faq';
+
+const lang: Lang = 'en';
+const faq = await faqFor(lang);
+const meta = pageMeta.repairs.en;
+---
+
+<Base
+  lang={lang}
+  altPath={PAGE_PATHS.repairs.sv}
+  title={meta.title}
+  description={meta.description}
+  structuredData={faq}
+  ogImageFile="Reparation3.jpg"
+>
+  <Page lang={lang} />
+</Base>

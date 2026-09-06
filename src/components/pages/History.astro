@@ -1,0 +1,203 @@
+---
+import Figure from '../Figure.astro';
+import { PAGE_PATHS, withBase, type Lang } from '../../i18n/config';
+import { t } from '../../i18n/ui';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const s = t(lang);
+
+/**
+ * TODO(client): every word on this page is NEW copy, written in the client's
+ * name. It is not harvested — the live site has no history page. Nothing is
+ * invented either: it is the same set of facts the "Om oss" page already
+ * publishes, re-ordered as a chronology with one heading per period so the
+ * page reads as its own rather than as a duplicate of Om oss. The client
+ * should read it through and approve or amend the wording.
+ *
+ * One deliberate difference from Om oss: that page prints "Svensk Tenn" once
+ * before writing "Svenskt Tenn" correctly in the next sentence, and the
+ * harvested copy is carried over verbatim there. This page, being new copy,
+ * writes "Svenskt Tenn" throughout.
+ */
+
+type Section = { heading: string; paragraphs: string[] };
+type Copy = {
+  heading: string;
+  lead: string;
+  early: Section[];
+  later: Section[];
+};
+
+const COPY: Record<Lang, Copy> = {
+  sv: {
+    heading: 'Historia',
+    lead: 'Larsson korgmakare har funnits sedan 1903. Verkstaden drivs i dag i fjärde generationen, och arbetet är detsamma: möbler och andra föremål i rotting, sjögräs och snöre, tillverkade och renoverade för hand.',
+    early: [
+      {
+        heading: '1903 — bröderna Larsson',
+        paragraphs: [
+          'Företaget KW Larsson Korgmöbelfabrik startades 1903 av bröderna Emil och Knut Wilhelm Larsson på Jakobsbergsgatan 43 i Stockholm. De tillverkade främst korgstolar, till bl a Grand Hotell Saltsjöbaden.',
+        ],
+      },
+      {
+        heading: 'Mellankrigstiden — John Larsson',
+        paragraphs: [
+          'Knut Wilhelms son John Larsson var lärling hos en korgmakarmästare innan han började arbeta med sin far och farbror. Han var intresserad av konstruktion och utvecklade företagets tillverkning av möbler i rotting. Nordiska kompaniet (NK) blev en stor kund av Johns moderna och funktionella möbler.',
+          'Under mellankrigstiden började designen av möbler förändras. Man tillverkade allt färre flätade korgstolar, och rotting blev en stark konkurrent till pil i den hantverksmässiga möbeltillverkningen.',
+        ],
+      },
+      {
+        heading: '1930-talet — Josef Frank och Svenskt Tenn',
+        paragraphs: [
+          'Redan på 1930-talet träffade John Larsson arkitekten Josef Frank, då nytillträdd formgivare för Svenskt Tenn. Josef Frank ritade möbler i rotting, och John Larsson tillverkade. Sedan dess har Larsson korgmakare oavbrutet tillverkat Josef Franks rottingmöbler för Svenskt Tenn.',
+        ],
+      },
+      {
+        heading: '1930- och 40-talen — egna modeller',
+        paragraphs: [
+          'John Larsson var förutom hantverkare även en skicklig formgivare. Under 1930–40-talet ritade han ett antal modeller för Larsson korgmakare, av vilka många finns i produktion än i dag.',
+        ],
+      },
+    ],
+    later: [
+      {
+        heading: '1973 — Stig Larsson',
+        paragraphs: [
+          '1973 efterträddes John Larsson i firman av sin son Stig Larsson, som drev korgmakeriet under namnet ”KW Larsson Eftr.” Stig Larsson fortsatte att samarbeta med arkitekter och designade bl a en dekorflätad matstol i infärgat material, för Ahlsén & Lindström efter målad förlaga av Bo Ahlsén.',
+          'Företagsnamnet ändrades 1989 till ”Larsson korgmakare”.',
+        ],
+      },
+      {
+        heading: '2005 — fjärde generationen',
+        paragraphs: [
+          '2005 övertog Stigs dotter Erica Larsson verksamheten som korgmakare i fjärde generation.',
+        ],
+      },
+    ],
+  },
+  en: {
+    heading: 'History',
+    lead: 'Larsson korgmakare has been in business since 1903. The workshop is run today by the fourth generation, and the work is the same: furniture and other objects in rattan, seagrass and cord, made and restored by hand.',
+    early: [
+      {
+        heading: '1903 — the Larsson brothers',
+        paragraphs: [
+          'The company KW Larsson Korgmöbelfabrik was started in 1903 by the brothers Emil and Knut Wilhelm Larsson at Jakobsbergsgatan 43 in Stockholm. They made mainly wicker chairs, for Grand Hotell Saltsjöbaden among others.',
+        ],
+      },
+      {
+        heading: 'Between the wars — John Larsson',
+        paragraphs: [
+          "Knut Wilhelm's son John Larsson was apprenticed to a master basket maker before he began working with his father and uncle. He was interested in construction and developed the company's production of furniture in rattan. Nordiska kompaniet (NK) became a large customer for John's modern and functional furniture.",
+          'Between the wars the design of furniture began to change. Fewer and fewer woven wicker chairs were made, and rattan became a strong competitor to willow in craft furniture making.',
+        ],
+      },
+      {
+        heading: 'The 1930s — Josef Frank and Svenskt Tenn',
+        paragraphs: [
+          "As early as the 1930s John Larsson met the architect Josef Frank, then newly appointed designer for Svenskt Tenn. Josef Frank drew furniture in rattan, and John Larsson made it. Since then Larsson korgmakare has made Josef Frank's rattan furniture for Svenskt Tenn without interruption.",
+        ],
+      },
+      {
+        heading: 'The 1930s and 40s — models of his own',
+        paragraphs: [
+          'As well as being a craftsman, John Larsson was also a skilled designer. During the 1930s–40s he drew a number of models for Larsson korgmakare, many of which are still in production today.',
+        ],
+      },
+    ],
+    later: [
+      {
+        heading: '1973 — Stig Larsson',
+        paragraphs: [
+          'In 1973 John Larsson was succeeded in the firm by his son Stig Larsson, who ran the basket workshop under the name “KW Larsson Eftr.” Stig Larsson went on working with architects and designed, among other things, a decoratively woven dining chair in dyed material, for Ahlsén & Lindström after a painted original by Bo Ahlsén.',
+          'The company name was changed in 1989 to “Larsson korgmakare”.',
+        ],
+      },
+      {
+        heading: '2005 — the fourth generation',
+        paragraphs: [
+          "In 2005 Stig's daughter Erica Larsson took over the business as a fourth-generation basket maker.",
+        ],
+      },
+    ],
+  },
+};
+
+const c = COPY[lang];
+---
+
+<div class="wrap wrap--narrow">
+  <h1>{c.heading}</h1>
+  <p class="lead">{c.lead}</p>
+
+  <Figure
+    file="JakobsbergsgatanElin.jpg"
+    sizes="(min-width: 851px) 788px, 90vw"
+    variant="content"
+    lightbox
+    lang={lang}
+    class="photo-wide"
+  />
+
+  {
+    c.early.map((section) => (
+      <section class="period">
+        <h2>{section.heading}</h2>
+        {section.paragraphs.map((p) => (
+          <p>{p}</p>
+        ))}
+      </section>
+    ))
+  }
+
+  <Figure
+    file="verkstad.jpg"
+    sizes="(min-width: 851px) 788px, 90vw"
+    variant="content"
+    lightbox
+    lang={lang}
+    class="photo-wide"
+  />
+
+  {
+    c.later.map((section) => (
+      <section class="period">
+        <h2>{section.heading}</h2>
+        {section.paragraphs.map((p) => (
+          <p>{p}</p>
+        ))}
+      </section>
+    ))
+  }
+
+  <p class="back">
+    <a href={withBase(PAGE_PATHS.about[lang])}>{s.nav.about}</a>
+  </p>
+</div>
+
+<style>
+  .lead {
+    font-size: var(--fs-heading);
+    line-height: var(--lh-heading);
+    max-width: 55ch;
+    margin-bottom: var(--space-5);
+  }
+
+  /* The only structural addition: air above each period heading, so the
+     chronology reads as a sequence. Same type, same two ink colours, nothing
+     else. */
+  .period + .period {
+    margin-top: var(--space-5);
+  }
+
+  :global(.photo-wide) {
+    margin-block: var(--space-5);
+  }
+
+  .back {
+    margin-top: var(--space-5);
+  }
+</style>

@@ -1,0 +1,184 @@
+---
+import Figure from '../Figure.astro';
+import { prose, images } from '../../lib/content';
+import { coverage, books, exhibition, pressCopy } from '../../data/press';
+import type { Lang } from '../../i18n/config';
+import { t } from '../../i18n/ui';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const s = t(lang);
+const c = pressCopy[lang];
+
+const blocks = prose('press', lang);
+const heading = blocks[0].lines[0];
+const imagesNote = blocks[1].lines[0];
+const photos = images('press');
+---
+
+<div class="wrap">
+  <h1>{heading}</h1>
+  <p class="lead">{c.intro}</p>
+
+  <h2>{s.pressListHeading}</h2>
+  <ul class="press-list">
+    {
+      coverage.map((e) => (
+        <li>
+          <p class="press-list__line">
+            {e.year && <span class="press-list__year">{e.year}</span>}
+            <span class="press-list__outlet">{e.outlet}</span>
+          </p>
+          <p class="press-list__title">
+            <a href={e.url} rel="noopener">
+              {e.title}
+            </a>
+          </p>
+          <p class="press-list__what">{e.what[lang]}</p>
+        </li>
+      ))
+    }
+  </ul>
+
+  <h2>{c.exhibitionHeading}</h2>
+  <ul class="press-list">
+    <li>
+      <p class="press-list__line">
+        <span class="press-list__year">{exhibition.year}</span>
+        <span class="press-list__outlet">{exhibition.outlet}</span>
+      </p>
+      <p class="press-list__title">
+        <a href={exhibition.url} rel="noopener">{exhibition.title}</a>
+      </p>
+      <p class="press-list__what">{exhibition.what[lang]}</p>
+    </li>
+  </ul>
+
+  <h2>{c.booksHeading}</h2>
+  <ul class="press-list">
+    {
+      books.map((b) => (
+        <li>
+          <p class="press-list__line">
+            <span class="press-list__year">{b.year}</span>
+            <span class="press-list__outlet">{b.author}</span>
+          </p>
+          <p class="press-list__title">
+            <a href={b.url} rel="noopener">
+              {b.title}
+            </a>
+          </p>
+          <p class="press-list__what">{b.publisher}</p>
+        </li>
+      ))
+    }
+  </ul>
+  <p class="press-note">{c.booksNote}</p>
+
+  {/* The client's own paragraph about requesting press images, verbatim, moved
+      below the list as agreed. */}
+  <h2>{s.pressImagesHeading}</h2>
+  <p class="lead">{imagesNote}</p>
+
+  <ul class="press-grid">
+    {
+      photos.map((p, i) => (
+        <li>
+          <Figure
+            file={p.file}
+            variant="thumb"
+            sizes="(min-width: 992px) 180px, (min-width: 576px) 30vw, 45vw"
+            lightbox
+            loading={i < 4 ? 'eager' : 'lazy'}
+            lang={lang}
+          />
+        </li>
+      ))
+    }
+  </ul>
+</div>
+
+<style>
+  .lead {
+    max-width: 62ch;
+    margin-bottom: var(--space-5);
+  }
+
+  h2 {
+    margin-top: var(--space-6);
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--color-text);
+  }
+
+  .press-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    max-width: 68ch;
+  }
+
+  .press-list li {
+    padding-block: var(--space-3);
+    border-bottom: 1px solid var(--color-panel);
+  }
+
+  .press-list p {
+    margin: 0;
+  }
+
+  .press-list__line {
+    font-size: var(--fs-form);
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+  }
+
+  .press-list__year {
+    min-width: 6ch;
+  }
+
+  .press-list__title {
+    margin-top: var(--space-1);
+  }
+
+  .press-list__what {
+    font-size: var(--fs-nav);
+    margin-top: var(--space-1);
+    max-width: 62ch;
+  }
+
+  .press-note {
+    font-size: var(--fs-form);
+    margin-top: var(--space-3);
+    max-width: 62ch;
+  }
+
+  .press-grid {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-3);
+  }
+
+  @media (min-width: 576px) {
+    .press-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  @media (min-width: 992px) {
+    .press-grid {
+      grid-template-columns: repeat(6, 1fr);
+    }
+  }
+
+  .press-grid :global(img) {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+  }
+</style>

@@ -1,0 +1,83 @@
+---
+import Figure from '../Figure.astro';
+import { prose } from '../../lib/content';
+import { company } from '../../data/company';
+import type { Lang } from '../../i18n/config';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+
+const t = prose('reparationer', lang);
+const heading = t[0].lines[0];
+const lead = t[1].lines[0];
+const body = t.slice(2, 7);
+const contact = t[7];
+
+/** The live mailto carries ?subject=Reparation; kept, properly encoded. */
+const repairMailto = `mailto:${company.email}?subject=${encodeURIComponent('Reparation')}`;
+---
+
+<div class="wrap wrap--narrow">
+  <h1>{heading}</h1>
+  <p class="lead">{lead}</p>
+
+  <div class="photos">
+    <Figure file="Reparation2.jpg" sizes="(min-width: 700px) 250px, 90vw" variant="thumb" lightbox lang={lang} />
+    <Figure file="Reparation3.jpg" sizes="(min-width: 700px) 250px, 90vw" variant="thumb" lightbox lang={lang} />
+    <Figure file="Reparation1.jpg" sizes="(min-width: 700px) 250px, 90vw" variant="thumb" lightbox lang={lang} />
+  </div>
+
+  {
+    body.map((b) => (
+      <p>
+        {b.lines.map((line, i) => (
+          <>
+            {i > 0 && <br />}
+            {line}
+          </>
+        ))}
+      </p>
+    ))
+  }
+
+  <p class="contact">
+    {contact.lines[0]}
+    <br />
+    <a href={company.phone.href}>{company.phone.display}</a>{', '}
+    <a href={repairMailto}>{company.email}</a>
+  </p>
+</div>
+
+<style>
+  .lead {
+    font-size: var(--fs-heading);
+    line-height: var(--lh-heading);
+    max-width: 55ch;
+    margin-bottom: var(--space-5);
+  }
+
+  .photos {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-4);
+    margin-bottom: var(--space-6);
+  }
+
+  @media (min-width: 700px) {
+    .photos {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  .photos :global(img) {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+  }
+
+  .contact {
+    margin-top: var(--space-5);
+  }
+</style>

@@ -1,0 +1,32 @@
+# ---------------------------------------------------------------------------
+# TODO(launch): DELETE THIS ENTIRE FILE'S Disallow RULE BEFORE GOING LIVE.
+#
+# This build is a demo hosted on a domain the client does not own. It must not
+# be indexable. Two things enforce that and BOTH must be removed at launch:
+#
+#   1. This file  -> public/robots.txt      (the Disallow: / below)
+#   2. The meta   -> src/layouts/Base.astro (<meta name="robots" content="noindex, nofollow">)
+#
+# Removing only one of them is not enough. At launch, replace the block below
+# with a normal allow-all plus the sitemap reference that is already commented
+# out at the bottom of this file.
+# ---------------------------------------------------------------------------
+
+User-agent: *
+Disallow: /
+
+# TODO(launch): at launch, delete everything above and uncomment the following.
+# The live WordPress site's own sitemap omitted all 9 product pages and answered
+# 404 while serving valid XML — the single worst SEO defect on the current site.
+# The Astro sitemap integration fixes this; make sure it is actually referenced.
+#
+# User-agent: *
+# Allow: /
+#
+# Sitemap: https://fredrikwryman-cmd.github.io/larsson-web/sitemap-index.xml
+#
+# The host above comes from `site` in astro.config.mjs. It used to read
+# example.github.io — a placeholder that would have published a sitemap
+# reference pointing nowhere, which is the exact defect the note above
+# complains about on the old WordPress site. If the demo moves to the
+# client's own domain, this line and that config value change together.

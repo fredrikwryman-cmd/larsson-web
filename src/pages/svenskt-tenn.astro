@@ -1,0 +1,22 @@
+---
+import Base from '../layouts/Base.astro';
+import Page from '../components/pages/SvensktTenn.astro';
+import { PAGE_PATHS, withBase, type Lang } from '../i18n/config';
+import { pageMeta } from '../i18n/meta';
+import { t } from '../i18n/ui';
+
+const lang: Lang = 'sv';
+const meta = pageMeta.svensktTenn.sv;
+const breadcrumbs = [{ label: t(lang).nav.commissions, href: withBase(PAGE_PATHS.commissions[lang]) }];
+---
+
+<Base
+  lang={lang}
+  altPath={PAGE_PATHS.svensktTenn.en}
+  title={meta.title}
+  description={meta.description}
+  ogImageFile="svenskt_tenn_miljo_mobler_50-1882928768-rszww1500h1500-83.jpg"
+  breadcrumbs={breadcrumbs}
+>
+  <Page lang={lang} />
+</Base>

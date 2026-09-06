@@ -1,0 +1,35 @@
+/* ===========================================================================
+   GRAVUR @font-face — LOCAL PREVIEW ONLY, UNLICENSED.
+
+   This file is included in the build ONLY when FONT=gravur is set. In every
+   other build astro.config.mjs aliases it away to font-face-none.css, so Vite
+   never sees these url() references and no Gravur byte can reach dist/.
+
+   The family names below also appear in tokens.css, which stays the single
+   place you read to know which families exist and which token selects them.
+   An @font-face block cannot be separated from its family name, and this block
+   has to be conditional — that is the only reason it lives outside tokens.css.
+
+   Weights are declared 300/400 to line up with --fw-body / --fw-heading, so
+   swapping typefaces changes nothing else in the stylesheet.
+   =========================================================================== */
+
+@font-face {
+  font-family: 'gravur-light';
+  src:
+    url('../assets/fonts/gravur/gravur-light.woff2') format('woff2'),
+    url('../assets/fonts/gravur/gravur-light.woff') format('woff');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'gravur-regular';
+  src:
+    url('../assets/fonts/gravur/gravur-regular.woff2') format('woff2'),
+    url('../assets/fonts/gravur/gravur-regular.woff') format('woff');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}

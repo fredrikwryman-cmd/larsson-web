@@ -1,0 +1,27 @@
+{
+  "slug": "stockholm-nr-1",
+  "name": "Stockholm No 1",
+  "designer": "Nyréns arkitektkontor",
+  "year": "1960-tal",
+  "client": null,
+  "material": "miljövänligt producerad rotting",
+  "dimensions": {
+    "height_mm": 840,
+    "depth_mm": 620,
+    "width_mm": 515,
+    "seat_height_mm": 435
+  },
+  "dimensions_raw": "Höjd: 840 mm | Djup: 620 mm | Bredd: 515 mm | Sitshöjd: 435 mm",
+  "care": "Rengöres med mjuk trasa fuktad med såpvatten. Eftertorka. Skydda möbeln mot långvarig fukt, i trädgård, på terrass eller balkong.",
+  "body_text": "Stockholm No 1\nFormgiven av Nyréns arkitektkontor (1960-tal)\nBeställ här…\nStockholm No 1 ritades av Nyréns arkitektkontor i mitten av 1960-talet och ingick i en serie rottingmöbler, som förutom den nätta karmstolen bl a omfattade stol utan armstöd och soffa. No 1 finns i produktion hos Larsson korgmakare.\nMaterial: miljövänligt producerad rotting\nHöjd: 840 mm\nDjup: 620 mm\nBredd: 515 mm\nSitshöjd: 435 mm\nRengöres med mjuk trasa fuktad med såpvatten. Eftertorka. Skydda möbeln mot långvarig fukt, i trädgård, på terrass eller balkong.\nTillbaka…",
+  "description": "Stockholm No 1 ritades av Nyréns arkitektkontor i mitten av 1960-talet och ingick i en serie rottingmöbler, som förutom den nätta karmstolen bl a omfattade stol utan armstöd och soffa. No 1 finns i produktion hos Larsson korgmakare.",
+  "category_slug": "formgiven-av-nyrens-arkitektkontor",
+  "images": [
+    {
+      "url": "https://larssonkorgmakare.se/wp-content/uploads/2019/01/stockholm1_27226-1x1.jpg",
+      "alt": null,
+      "file": "stockholm1_27226-1x1.jpg"
+    }
+  ],
+  "source_url": "https://larssonkorgmakare.se/portfolios/stockholm-nr-1/"
+}

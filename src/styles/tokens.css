@@ -1,0 +1,230 @@
+/* ---------------------------------------------------------------------------
+   Self-hosted Archivo, cut to match Gravur. Two files, nothing else.
+   Paths are relative so Vite fingerprints them and the `base` prefix is
+   applied correctly -- an absolute /fonts/ URL would 404 under GitHub Pages.
+   Subset to Latin + the Swedish set. font-display: swap so text is
+   readable immediately; the fallback stack in --font-body is metric-adjacent
+   enough that the swap is not jarring.
+   --------------------------------------------------------------------------- */
+@font-face {
+  font-family: 'Archivo';
+  src: url('../assets/fonts/archivo-light.woff2') format('woff2');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Archivo';
+  src: url('../assets/fonts/archivo-regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ===========================================================================
+   DESIGN TOKENS — Larsson Korgmakare
+   ---------------------------------------------------------------------------
+   Every value here was MEASURED from the computed styles of the live
+   WordPress site, not copied from its authored CSS. Source data:
+   larsson-harvest/render-truth.json (250 text elements x 3 widths) plus a
+   breakpoint sweep at 849/851/1000/1200/1201/1600/1601/1800/2101/2200 px.
+
+   FONT FAMILIES GO THROUGH EXACTLY TWO CUSTOM PROPERTIES:
+       --font-body      and      --font-heading
+   declared once, below. No other file in this project may name a font family.
+   If you need a third role, alias it to one of these two here — never
+   introduce a literal family name elsewhere.
+   =========================================================================== */
+
+:root {
+  /* -------------------------------------------------------------------------
+     TYPEFACES  --  THE ONLY PLACE A FONT FAMILY IS NAMED IN THIS PROJECT.
+
+     The live site uses Gravur Light (body) and Gravur Regular (headings).
+     Gravur is commercial and DOES NOT SHIP. Archivo is the approved
+     substitute, cut as two static instances with the width axis condensed
+     and the weight axis reduced to sit closer to Gravur's set width and
+     stem values -- see larsson-harvest/font-cut.md for the solved axis
+     coordinates and the residual error.
+
+     Cardo is deliberately NOT here. Its only appearance on the live site was
+     the untranslated English string "Portfolio category:", which the rebuild
+     replaces with a Swedish h1. There is no third font token.
+     ------------------------------------------------------------------------- */
+  --font-body: 'Archivo', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-heading: var(--font-body);
+}
+
+/* ---------------------------------------------------------------------------
+   LOCAL-ONLY TYPEFACE OVERRIDE.
+
+   Setting FONT=gravur at build time puts data-font="gravur" on <html> and
+   pulls in the Gravur @font-face block (see font-face-gravur.css). That makes
+   these two declarations win, and the whole site renders in the original
+   commercial typeface for local comparison.
+
+   Gravur is UNLICENSED and never ships. Archivo stays second in each stack, so
+   even if the files were somehow missing the site falls back to the licensed
+   face rather than to a system font. Nothing outside this file names a family.
+   --------------------------------------------------------------------------- */
+:root[data-font='gravur'] {
+  --font-body: 'gravur-light', 'Archivo', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-heading: 'gravur-regular', 'Archivo', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+:root {
+
+  /* -------------------------------------------------------------------------
+     TYPE SCALE — what actually renders
+
+     The authored CSS declares a 16/18/20/23/26 ladder across five breakpoint
+     bands, but only TWO distinct renderings exist below 2101px. Measured:
+
+       <= 850px    body 18px   heading 20px   filter links 16px
+       851-2100px  body 23px   heading 26px   filter links 20px
+
+     The three authored bands 851-1200, 1201-1600 and 1601-2100 all resolve to
+     identical values — they are redundant. See render-truth.md.
+
+     Values are in rem against a 16px root so they scale with user preference;
+     the px equivalents in the comments are what the live site emits.
+     ------------------------------------------------------------------------- */
+  --fs-form: 0.9375rem; /* 15px — contact-form labels; NEVER responsive on the live site */
+  --fs-nav: 1rem; /* 16px — portfolio filter/category links, small viewport */
+  --fs-body: 1.125rem; /* 18px */
+  --fs-heading: 1.25rem; /* 20px */
+  --fs-button: 1.4375rem; /* 23px — .btn-lg; also never responsive */
+
+  /* Two sizes on the live site are FLUID, not stepped, and clamp at 1600px.
+     Formulas reconstructed from measurements at 10 widths.
+       category page h1 : min(20.308px + 2.16422vw, 54.936px)   ratio 1.2
+       fullscreen menu  : min(18.625px + 0.5859375vw, 28px)     ratio 1
+     Kept as-is because they are the only genuinely responsive type on the
+     site and the stepped ladder cannot express them. */
+  --fs-display: min(20.308px + 2.16422vw, 54.936px);
+  --fs-menu: min(18.625px + 0.5859375vw, 28px);
+
+  /* -------------------------------------------------------------------------
+     LINE HEIGHT
+
+     One ratio dominates everything: 1.35, on 226 of 250 measured elements
+     (18 -> 24.3px, 20 -> 27px, 23 -> 31.05px, 26 -> 35.1px). The exceptions
+     are the portfolio filter links at 0.8 and the fluid category h1 at 1.2.
+     ------------------------------------------------------------------------- */
+  --lh-body: 1.35;
+  --lh-heading: 1.35;
+  --lh-nav: 0.8; /* portfolio filter/category links — deliberate, tight stacked list */
+  --lh-form: 1.35;
+  --lh-button: 1.5;
+  --lh-display: 1.2; /* fluid category-page h1 */
+  --lh-menu: 1; /* fullscreen menu */
+
+  /* -------------------------------------------------------------------------
+     WEIGHT & TRACKING
+
+     The site sets NO bold and NO letter-spacing anywhere in content. Every one
+     of the 250 measured elements is font-weight 400, letter-spacing normal.
+     Emphasis in this design comes from size and from the Light/Regular pair,
+     never from weight.
+     ------------------------------------------------------------------------- */
+  --fw-body: 300;    /* Gravur Light  -> Archivo cut @ 300 */
+  --fw-heading: 400; /* Gravur Regular -> Archivo cut @ 400 */
+  --fw-regular: 400;
+  --ls-normal: normal;
+
+  /* -------------------------------------------------------------------------
+     COLOUR
+
+     Exactly two ink colours across the whole site:
+       rgb(33,33,33)  154 elements — all body text and all headings
+       rgb(0,0,0)      96 elements — all <a> links, without exception
+
+     Note links are DARKER than body text, the reverse of the usual
+     convention, and carry no underline or colour change to mark them.
+     Reproduced faithfully; flagged as an accessibility concern in the report.
+     ------------------------------------------------------------------------- */
+  --color-text: #212121; /* all prose and headings */
+  --color-link: #000000; /* every <a>, set !important on the live site */
+  --color-link-hover: #b2b2b2;
+  --color-bg: #ffffff;
+  --color-panel: #f0e8d3; /* warm beige — contact form, and the homepage tagline tile */
+
+  /* -------------------------------------------------------------------------
+     SPACING
+     ------------------------------------------------------------------------- */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 1rem;
+  --space-4: 1.5rem;
+  --space-5: 2.5rem;
+  --space-6: 4rem;
+
+  /* Measured grid gutters on the live product grid. The column count changes
+     at the Bootstrap breakpoints the theme inherits, NOT at the 851px type
+     breakpoint — the two are independent, which is worth remembering when
+     building the grid. */
+  --grid-gutter: 0; /* <576px, 1 column */
+}
+
+@media (min-width: 576px) {
+  :root {
+    --grid-gutter: 20px; /* 576-991px, 2 columns */
+  }
+}
+
+@media (min-width: 992px) {
+  :root {
+    --grid-gutter: 23px; /* >=992px, 3 columns */
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   THE ONE REAL BREAKPOINT: 851px.
+
+   Verified by sweep — 849px renders 18/20, 851px renders 23/26, and nothing
+   changes again until 2101px.
+   --------------------------------------------------------------------------- */
+@media (min-width: 851px) {
+  :root {
+    --fs-body: 1.4375rem; /* 23px */
+    --fs-heading: 1.625rem; /* 26px */
+    --fs-nav: 1.25rem; /* 20px */
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   NOT REPRODUCED — the >=2101px regression.
+
+   On the live site, viewports of 2101px and wider drop body text back DOWN to
+   18px (line-height 1.5) and switch the product heading to a fluid ~28.1px at
+   ratio 1.2. Text gets smaller on bigger screens. This is almost certainly a
+   mistake in the original wp-custom-css rather than a design intent, so it is
+   deliberately NOT carried over here.
+
+   TODO(confirm): show the client the live site at 2560px and confirm they do
+   not want that behaviour before this decision is considered final.
+   --------------------------------------------------------------------------- */
+
+/* ---------------------------------------------------------------------------
+   BODY-COPY LINKS ARE UNDERLINED.
+
+   The live site gives links no underline and no colour change — they are #000
+   against #212121 body text, so nothing but position distinguishes them. This
+   single rule fixes that for prose links only.
+
+   Scope: links inside a paragraph or list item within <main>, excluding any
+   link that carries a class. That deliberately leaves alone the component
+   links, which are whole blocks rather than words in a sentence: the homepage
+   tiles (.tiles__link), product cards (.card__link) and the uppdrag cases
+   (.cases__link). Headings, the nav overlay, the product prev/next and the
+   footer are untouched.
+
+   TO REVERT: delete this rule. It is the only place the site sets an
+   underline, and nothing else depends on it.
+   --------------------------------------------------------------------------- */
+main :is(p, li) a:not([class]) {
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+  text-decoration-thickness: from-font;
+}

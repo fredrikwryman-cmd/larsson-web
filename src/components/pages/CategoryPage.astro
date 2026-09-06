@@ -1,0 +1,50 @@
+---
+import ProductGrid from '../ProductGrid.astro';
+import { PAGE_PATHS, withBase, type Lang } from '../../i18n/config';
+import { t } from '../../i18n/ui';
+import type { GridItem } from '../../lib/products';
+
+interface Props {
+  lang: Lang;
+  cat: { slug: string; label: Record<Lang, string>; intro: Record<Lang, string> };
+  items: GridItem[];
+}
+const { lang, cat, items } = Astro.props;
+const s = t(lang);
+---
+
+{/*
+  The live page prefixes this heading with the untranslated English string
+  "Portfolio category:". That label is dropped entirely — the category name is
+  the h1 now. The live category pages also emit no canonical URL; Base supplies
+  one, which is a fix rather than a change of design.
+
+  TODO(client): the intro paragraph is NEW COPY for this rebuild — the live
+  category pages are bare lists. It asserts only what the harvested pages
+  already establish. See src/data/categories.ts.
+*/}
+<div class="wrap">
+  <h1 class="display">{cat.label[lang]}</h1>
+  <p class="cat-intro">{cat.intro[lang]}</p>
+
+  <ProductGrid items={items} lang={lang} />
+
+  <p class="back">
+    <a href={withBase(PAGE_PATHS.products[lang])}>{s.backToProducts}</a>
+  </p>
+</div>
+
+<style>
+  h1 {
+    margin-bottom: var(--space-4);
+  }
+
+  .cat-intro {
+    max-width: 62ch;
+    margin-bottom: var(--space-6);
+  }
+
+  .back {
+    margin-top: var(--space-6);
+  }
+</style>

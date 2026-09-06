@@ -1,0 +1,63 @@
+---
+import ProductCard from './ProductCard.astro';
+import type { GridItem } from '../lib/products';
+import type { Lang } from '../i18n/config';
+import { t } from '../i18n/ui';
+
+interface Props {
+  /* GridItem carries the per-language measurement lines each card renders. */
+  items: GridItem[];
+  lang: Lang;
+  as?: 'h2' | 'h3';
+}
+
+const { items, lang, as = 'h2' } = Astro.props;
+const s = t(lang);
+---
+
+{/* Plain CSS grid. The live site's grid is CSS flex filtered with display:none
+    — Isotope loads on every page and is never used for it. */}
+<ul class="grid" id="product-grid">
+  {
+    items.map((item, i) => (
+      <li class="grid__item" data-category={item.categorySlug}>
+        <ProductCard {...item} lang={lang} as={as} loading={i < 3 ? 'eager' : 'lazy'} />
+      </li>
+    ))
+  }
+</ul>
+
+<p class="grid__empty" id="grid-empty" hidden role="status">{s.noneInCategory}</p>
+
+<style>
+  .grid {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: var(--grid-gutter);
+    grid-template-columns: 1fr;
+  }
+
+  /* Column counts measured on the live grid: 1 below 576px, 2 to 991px, 3 at
+     992px and up. Independent of the 851px type breakpoint. */
+  @media (min-width: 576px) {
+    .grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (min-width: 992px) {
+    .grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  .grid__item[hidden] {
+    display: none;
+  }
+
+  .grid__empty {
+    margin-top: var(--space-5);
+  }
+</style>

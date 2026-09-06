@@ -1,0 +1,24 @@
+---
+import { PAGE_PATHS, withBase, type Lang } from '../../i18n/config';
+import { t } from '../../i18n/ui';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const s = t(lang);
+---
+
+{/*
+  TODO(launch): this page should keep `noindex` even after the site-wide demo
+  noindex in Base.astro is removed — a thank-you page has no business in search
+  results. Add a per-page robots meta then.
+*/}
+<div class="wrap wrap--narrow">
+  <h1>{s.thanksHeading}</h1>
+  <p>{s.thanksBody}</p>
+  <p>
+    <a href={withBase(PAGE_PATHS.products[lang])}>{s.thanksProducts}</a><br />
+    <a href={withBase(PAGE_PATHS.home[lang])}>{s.thanksHome}</a>
+  </p>
+</div>

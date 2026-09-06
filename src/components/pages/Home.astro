@@ -1,0 +1,162 @@
+---
+import Figure from '../Figure.astro';
+import { PAGE_PATHS, withBase, type Lang } from '../../i18n/config';
+import { t } from '../../i18n/ui';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const s = t(lang);
+
+/**
+ * The homepage is the one page with new copy.
+ *
+ * The live homepage was a wordmark plus four linked image tiles and nothing
+ * else — 105 characters of text, all of it an admin-only Instagram plugin error
+ * that visitors never saw. Its only prose was baked into a JPEG
+ * (textbild_1.jpg); that image is no longer used anywhere and its words are the
+ * h1 below.
+ */
+const tiles = [
+  { key: 'about', file: null },
+  { key: 'products', file: '230_27193-1x1.jpg' },
+  { key: 'commissions', file: 'NM_MK.jpg' },
+  { key: 'repairs', file: 'verkstad_36511.jpg' },
+] as const;
+---
+
+<div class="wrap">
+  <h1 class="home__h1">{s.home_h1}</h1>
+  <p class="home__intro">{s.home_intro}</p>
+
+  {/*
+    The live 2x2 tile grid, visually unchanged, but as real links with real
+    visible headings instead of four bare images with alt="". The first tile has
+    no photograph — it inherits the beige panel the tagline image used to sit
+    on, so the composition still reads as a 2x2.
+  */}
+  <nav class="tiles" aria-label={s.shortcuts}>
+    <ul>
+      {
+        tiles.map((tile, i) => (
+          <li class:list={['tiles__item', !tile.file && 'tiles__item--panel']}>
+            <a class="tiles__link" href={withBase(PAGE_PATHS[tile.key][lang])}>
+              {
+                /* alt="" deliberately: each tile is a link whose accessible name
+                   comes from the visible heading below the image. Giving the
+                   image the destination name too made a screen reader announce
+                   it twice (Lighthouse: image-redundant-alt). */
+                tile.file && (
+                  <Figure
+                    file={tile.file}
+                    alt=""
+                    variant="thumb"
+                    sizes="(min-width: 851px) 344px, (min-width: 560px) 45vw, 90vw"
+                    loading={i < 2 ? 'eager' : 'lazy'}
+                    lang={lang}
+                  />
+                )
+              }
+              <span class="tiles__label">{s.nav[tile.key]}</span>
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </nav>
+
+  <section class="home__repairs" aria-labelledby="repairs-heading">
+    <h2 id="repairs-heading">{s.home_repairsHeading}</h2>
+    <p>{s.home_repairs}</p>
+    <p><a href={withBase(PAGE_PATHS.repairs[lang])}>{s.home_repairsLink}</a></p>
+  </section>
+</div>
+
+<style>
+  .home__h1 {
+    max-width: 20ch;
+    margin-block: var(--space-6) var(--space-4);
+  }
+
+  .home__intro {
+    max-width: 62ch;
+    margin-bottom: var(--space-6);
+  }
+
+  .tiles ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    /* minmax(0, 1fr), not 1fr. A bare 1fr is minmax(auto, 1fr) and floors at
+       the column's min-content width, so the "Om oss" panel — whose label is
+       set at display size — dragged its column wider than the other and the
+       two tiles stopped matching: 593px against 507px where both should be
+       550px. Measured after moving the square onto the image; the old rule hid
+       it because the item's fixed ratio suppressed the contribution. */
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-4);
+  }
+
+  @media (min-width: 560px) {
+    .tiles ul {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 46px;
+    }
+  }
+
+  /* The square belongs to the PICTURE, not to the tile.
+     It used to sit on the <li>: the image took height:100% of that square, and
+     the caption — laid out after it in the same flex column — overflowed the
+     item's box. The next row's photograph was then painted over the bottom of
+     the words. Measured: 11px sliced off a 27px caption, at every width from
+     320 to 559, on both home pages. Above 560 the grid gap happens to be 46px,
+     larger than the caption, so it cleared by luck and the bug was invisible on
+     a desktop screen.
+     With the ratio on the image, the tile grows to picture plus caption and
+     there is nothing to overflow. */
+  .tiles__item--panel {
+    aspect-ratio: 1 / 1;
+  }
+
+  .tiles__link {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+
+  .tiles__item :global(img) {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    height: auto;
+    object-fit: cover;
+  }
+
+  .tiles__item--panel .tiles__link {
+    background: var(--color-panel);
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: var(--space-4);
+  }
+
+  .tiles__label {
+    display: block;
+    font-family: var(--font-heading);
+    font-weight: var(--fw-heading);
+    font-size: var(--fs-heading);
+    margin-top: var(--space-2);
+  }
+
+  .tiles__item--panel .tiles__label {
+    margin-top: 0;
+    font-size: var(--fs-display);
+    line-height: var(--lh-display);
+  }
+
+  .home__repairs {
+    margin-block: var(--space-6);
+    max-width: 62ch;
+  }
+</style>

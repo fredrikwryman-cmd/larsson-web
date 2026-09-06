@@ -1,0 +1,4 @@
+/* Intentionally empty.
+   astro.config.mjs aliases the optional @font-face slot to this file whenever
+   FONT is not `gravur`, so a licensed build never references an unlicensed
+   font file and Vite never emits one. Do not add anything here. */

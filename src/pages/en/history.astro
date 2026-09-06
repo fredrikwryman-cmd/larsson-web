@@ -1,0 +1,22 @@
+---
+import Base from '../../layouts/Base.astro';
+import Page from '../../components/pages/History.astro';
+import { PAGE_PATHS, withBase, type Lang } from '../../i18n/config';
+import { pageMeta } from '../../i18n/meta';
+import { t } from '../../i18n/ui';
+
+const lang: Lang = 'en';
+const meta = pageMeta.history.en;
+const breadcrumbs = [{ label: t(lang).nav.about, href: withBase(PAGE_PATHS.about[lang]) }];
+---
+
+<Base
+  lang={lang}
+  altPath={PAGE_PATHS.history.sv}
+  title={meta.title}
+  description={meta.description}
+  ogImageFile="JakobsbergsgatanElin.jpg"
+  breadcrumbs={breadcrumbs}
+>
+  <Page lang={lang} />
+</Base>

@@ -1,0 +1,27 @@
+{
+  "slug": "stol-c",
+  "name": "Stol C",
+  "designer": "John Larsson",
+  "year": "1970-tal",
+  "client": "Riksdagens Bad",
+  "material": "miljövänligt producerad rotting",
+  "dimensions": {
+    "height_mm": 1060,
+    "depth_mm": 930,
+    "width_mm": 630,
+    "seat_height_mm": null
+  },
+  "dimensions_raw": "Höjd: 1060 mm | Djup: 930 mm | Bredd: 630 mm | Sitshöjd: 310/400 mm",
+  "care": "Rengöres med mjuk trasa fuktad med såpvatten. Eftertorka. Skydda möbeln mot långvarig fukt, i trädgård, på terrass eller balkong.",
+  "body_text": "Stol C\nFormgiven av John Larsson\nför Riksdagens Bad (1970-tal)\nBeställ här…\nStol C ritades av John Larsson för Riksdagshusets Badavdelning. Arkitekt Peter Celsing ritade en snarlik modell, utan armstöd, för Riksbankshuset (1976) vilken också tillverkades av Larsson korgmakare.\nMaterial: miljövänligt producerad rotting\nHöjd: 1060 mm\nDjup: 930 mm\nBredd: 630 mm\nSitshöjd: 310/400 mm\nRengöres med mjuk trasa fuktad med såpvatten. Eftertorka. Skydda möbeln mot långvarig fukt, i trädgård, på terrass eller balkong.\nTillbaka…",
+  "description": "Stol C ritades av John Larsson för Riksdagshusets Badavdelning. Arkitekt Peter Celsing ritade en snarlik modell, utan armstöd, för Riksbankshuset (1976) vilken också tillverkades av Larsson korgmakare.",
+  "category_slug": "formgiven-av-john-larsson",
+  "images": [
+    {
+      "url": "https://larssonkorgmakare.se/wp-content/uploads/2019/01/C_27208_1x1.jpg",
+      "alt": null,
+      "file": "C_27208_1x1.jpg"
+    }
+  ],
+  "source_url": "https://larssonkorgmakare.se/portfolios/stol-c/"
+}

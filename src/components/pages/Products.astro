@@ -1,0 +1,40 @@
+---
+import ProductGrid from '../ProductGrid.astro';
+import CategoryFilter from '../CategoryFilter.astro';
+import { prose } from '../../lib/content';
+import { productItems } from '../../lib/products';
+import type { Lang } from '../../i18n/config';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+
+const t = prose('produkter', lang);
+const heading = t[0].lines[0];
+const lead = t[1].lines[0];
+const items = await productItems();
+---
+
+<div class="wrap">
+  <h1>{heading}</h1>
+  <p class="lead">{lead}</p>
+
+  {/*
+    TODO(client): the fourth card here reads "Stol 258" — the override in
+    lib/products.ts — while the product page's own <h1> reads "Soffa 258".
+    Five of six surfaces say Stol; the detail heading is the odd one out.
+    Left exactly as the client published it — this is their decision to make,
+    not ours. (This comment used to describe the card as reading "Soffa 258",
+    which contradicted both the code and the rendered page.)
+  */}
+  <CategoryFilter lang={lang} />
+  <ProductGrid items={items} lang={lang} />
+</div>
+
+<style>
+  .lead {
+    max-width: 60ch;
+    margin-bottom: var(--space-6);
+  }
+</style>

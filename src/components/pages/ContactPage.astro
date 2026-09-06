@@ -1,0 +1,415 @@
+---
+import { Image } from 'astro:assets';
+import { prose } from '../../lib/content';
+import { company } from '../../data/company';
+import { PAGE_PATHS, withBase, type Lang } from '../../i18n/config';
+import { t } from '../../i18n/ui';
+import mapImg from '../../assets/map-skeppsbron-46.png';
+import entranceImg from '../../assets/Extend_and_warm_photograph_2K_202609051926.jpeg';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const s = t(lang);
+
+const blocks = prose('kontakt', lang);
+const heading = blocks[0].lines[0];
+const intro = blocks[1].lines[0];
+
+const successUrl = new URL(withBase(PAGE_PATHS.thanks[lang]), Astro.site).href;
+
+/**
+ * The map is a STATIC IMAGE generated at build-prep time from OpenStreetMap
+ * tiles and served from our own assets. No embed, no iframe, no third-party
+ * request at page view, no cookies, no analytics endpoint — the visitor's
+ * browser talks only to this site. The link goes out to OpenStreetMap for
+ * anyone who wants a real map to pan.
+ */
+const mapsUrl =
+  `https://www.openstreetmap.org/?mlat=${company.geo.lat}&mlon=${company.geo.lon}` +
+  `#map=${company.geo.zoom}/${company.geo.lat}/${company.geo.lon}`;
+
+/** Strip the phone/email tail so they can be rendered as real links. */
+const introText = intro
+  .replace(/\s*08-411 50 53,\s*info@larssonkorgmakare\.se\s*$/, '')
+  .trim();
+---
+
+<div class="wrap kontakt">
+  <h1>{heading}</h1>
+
+  <p>
+    {introText}
+    <br />
+    <a href={company.phone.href}>{company.phone.display}</a>{', '}
+    <a href={`mailto:${company.email}`}>{company.email}</a>
+  </p>
+  <p>
+    {company.address.oneLine}<br />
+    {company.entrance[lang]}
+  </p>
+  <p>
+    <a href={company.instagram.url} rel="noopener">Instagram {company.instagram.handle}</a>
+  </p>
+
+  <section class="directions" aria-labelledby="directions-h">
+    <h2 id="directions-h">{s.directionsHeading}</h2>
+
+    <figure class="map">
+      <a href={mapsUrl} rel="noopener">
+        <Image
+          src={mapImg}
+          alt={s.mapAlt}
+          widths={[400, 700, 1000]}
+          sizes="(min-width: 851px) 756px, 92vw"
+          loading="eager"
+        />
+      </a>
+      <figcaption>
+        © OpenStreetMap{' '}
+        <a href="https://www.openstreetmap.org/copyright" rel="noopener">{s.osmContributors}</a>. <a
+          href={mapsUrl}
+          rel="noopener">{s.openInMaps}</a
+        >
+      </figcaption>
+    </figure>
+
+    {/*
+      The way in. Nothing else on the site shows the door, and the address alone
+      does not help much in Gamla stan — this is the picture a visitor matches
+      against what is in front of them when they are standing in the lane.
+
+      No fixed aspect ratio: the frame follows the file. Astro's <Image> emits
+      the intrinsic width and height, so the box is the photograph's own shape
+      and nothing is cropped away.
+
+      TODO(client): REPLACE THIS WITH AN UNRETOUCHED PHOTOGRAPH BEFORE LAUNCH.
+
+      The file is a real photograph of the workshop's door, but it has been
+      extended sideways and warmed with a generative tool. The wall, the door,
+      the cobblestones and the position of the sign are all true. The LETTERING
+      ON THE SIGN IS NOT: the tool redrew it, and it now reads "Larron
+      Korgmakare AB" instead of "Larsson", with the wrong founding year.
+
+      Nothing on the page states what the sign says, and the alt text has been
+      written to describe it only as a black sign with a monogram — see
+      entranceAlt in src/i18n/ui.ts, in both languages. That keeps the page from
+      asserting something false, but it does not make the picture true: a
+      visitor standing in the lane is looking at a sign that does not match. An
+      unedited photograph from the workshop is the only real fix.
+    */}
+    <figure class="entrance">
+      <Image
+        src={entranceImg}
+        alt={s.entranceAlt}
+        width={1512}
+        height={1129}
+        widths={[400, 756, 1200, 1512]}
+        sizes="(min-width: 851px) 756px, 92vw"
+        loading="lazy"
+      />
+    </figure>
+
+    {s.directions.map((line) => <p>{line}</p>)}
+  </section>
+
+  {/*
+    Rebuilt with Web3Forms, styled to the original's own recipe:
+      .wpcf7-form        background #f0e8d3, 50px padding
+      label              display block, 15px
+      .form-control      background none; border-bottom 1px solid #000
+      submit             plain text reading SKICKA, no border, no fill
+
+    The access key below is PUBLIC and has to be. Web3Forms authenticates the
+    form, not the sender: the key names the mailbox the message is delivered to
+    and nothing else. It grants no read access, no account access, and no way to
+    send anywhere but that one address. GitHub Pages serves static files and
+    cannot hold a secret, so a key that had to stay private could not live here
+    at all — which is exactly why the Anthropic key is in a Cloudflare Worker
+    instead, and never in the page.
+
+    The subject line is Swedish on the English pages too, and so are the
+    field NAMES below — rubrik, modell, meddelande, samtycke. Web3Forms uses
+    the field name as the label on each line of the mail, so these are read
+    by the workshop in its own inbox and nowhere else. A mixed-language
+    inbox is harder to sort than a consistent one, and which page an
+    enquiry came from is visible from the message itself. name and email
+    stay English because Web3Forms treats those two specially.
+  */}
+  <form
+    class="form"
+    action="https://api.web3forms.com/submit"
+    method="POST"
+    id="contact-form"
+  >
+    <input type="hidden" name="access_key" value="c10462a7-17f2-445f-97a4-b09a499ccf6a" />
+    <input type="hidden" name="redirect" value={successUrl} />
+    <input type="hidden" name="subject" value="Larsson Korgmakare — kontaktformuläret" />
+    <input type="hidden" name="from_name" value="Larsson Korgmakare" />
+
+    {/* Honeypot. Hidden from sighted users AND from assistive tech. */}
+    <input
+      type="checkbox"
+      name="botcheck"
+      class="botcheck"
+      tabindex="-1"
+      autocomplete="off"
+      aria-hidden="true"
+    />
+
+    <p class="form__legend">{s.requiredLegend}</p>
+
+    <div class="form__pair">
+      <p class="field">
+        <label for="name">{s.formName} *</label>
+        <input type="text" id="name" name="name" required aria-required="true" autocomplete="name" />
+      </p>
+
+      <p class="field">
+        <label for="email">{s.formEmail} *</label>
+        <input type="email" id="email" name="email" required aria-required="true" autocomplete="email" />
+      </p>
+
+      <p class="field">
+        <label for="subject">{s.formSubject}</label>
+        {/*
+          The field name is ASCII on purpose. Measured against the live API: a
+          name containing "ä" is echoed back as "Ã¤mne", i.e. Web3Forms reads the
+          field NAMES as Latin-1, and that name is what labels the line in the
+          workshop's inbox. Values are unaffected — åäö survive intact — so this
+          is the only field that had to change. The visible label is untouched.
+        */}
+        <input type="text" id="subject" name="rubrik" autocomplete="off" />
+      </p>
+
+      <p class="field">
+        <label for="model">{s.formModel}</label>
+        <input type="text" id="model" name="modell" autocomplete="off" />
+      </p>
+    </div>
+
+    <p class="field">
+      <label for="message">{s.formMessage} *</label>
+      <textarea id="message" name="meddelande" rows="10" required aria-required="true"></textarea>
+    </p>
+
+    {/*
+      TODO(launch): THERE IS NO FILE FIELD HERE, AND THIS IS WHY.
+
+      Measured against the live API on 2026-09-05 with the real access key: a
+      submission carrying a file is rejected outright —
+
+        HTTP 400 {"success":false,"data":{},
+                  "message":"You are trying to use a Pro feature,
+                             Please upgrade to use file uploads."}
+
+      The file is not dropped and the rest delivered. NOTHING is delivered. The
+      identical submission with the file removed returns 200 success:true. So a
+      file field on the free plan does not cost the visitor a photograph, it
+      costs them their entire message, silently, at the moment they were most
+      likely to be sending one — this is a workshop that repairs furniture, and
+      a picture of the broken chair is the obvious thing to attach.
+
+      Rather than accept a file and quietly throw it away, which would be a lie
+      told to the visitor, the field is gone and the email route is offered in
+      its place. The label string, the size-limit hint and the too-large error
+      all remain in src/i18n/ui.ts, unused, for the day the client is on a plan
+      that supports uploads; restoring the field is putting this block back.
+    */}
+    <p class="field">
+      <span class="hint">{s.formPhotoByEmail}</span>
+    </p>
+
+    <p class="field field--check">
+      <input type="checkbox" id="consent" name="samtycke" value="ja" required aria-required="true" />
+      <label for="consent">{s.formConsent} *</label>
+    </p>
+
+    <p class="form__submit">
+      <button type="submit">{s.formSubmit}</button>
+    </p>
+  </form>
+</div>
+
+<style>
+  /* Measured on the live contact page: the column is 756px wide — the same
+     width as the form panel — and the heading and intro are centred. */
+  .kontakt {
+    max-width: calc(756px + 2 * 30px);
+  }
+
+  .kontakt > h1,
+  .kontakt > p {
+    text-align: center;
+  }
+
+  .directions {
+    margin-top: var(--space-6);
+  }
+
+  .directions h2 {
+    text-align: center;
+  }
+
+  .map {
+    margin: 0 0 var(--space-4);
+  }
+
+  .map :global(img) {
+    width: 100%;
+    height: auto;
+  }
+
+  /* The entrance photograph. No aspect-ratio and no fixed height: the image
+     carries its own intrinsic proportions and the figure takes their shape. */
+  .entrance {
+    margin: 0 0 var(--space-4);
+  }
+
+  .entrance :global(img) {
+    width: 100%;
+    height: auto;
+  }
+
+  .map figcaption {
+    font-size: var(--fs-form);
+    margin-top: var(--space-2);
+  }
+
+  .directions p {
+    max-width: 62ch;
+  }
+
+  /* The beige panel, 50px of air on every side — measured from the original. */
+  .form {
+    background: var(--color-panel);
+    padding: 50px;
+    margin-top: var(--space-6);
+  }
+
+  @media (max-width: 575px) {
+    .form {
+      padding: var(--space-4);
+    }
+  }
+
+  .form__legend {
+    font-size: var(--fs-form);
+    margin: 0 0 var(--space-5);
+  }
+
+  .field {
+    margin: 0 0 var(--space-5);
+  }
+
+  label {
+    display: block;
+    font-size: var(--fs-form);
+    line-height: var(--lh-form);
+  }
+
+  /* The original's whole input treatment: no box, no fill, no radius — one
+     hairline under the field and nothing else. */
+  input[type='text'],
+  input[type='email'],
+  textarea {
+    width: 100%;
+    background: none;
+    border: 0;
+    border-bottom: 1px solid var(--color-link);
+    border-radius: 0;
+    padding: 5px 0 0;
+    font-family: var(--font-body);
+    font-weight: var(--fw-body);
+    font-size: var(--fs-body);
+    line-height: var(--lh-body);
+    color: var(--color-text);
+  }
+
+  textarea {
+    resize: vertical;
+    min-height: 320px;
+  }
+
+  /* The first four fields run two per row from 576px, as on the original. */
+  @media (min-width: 576px) {
+    .form__pair {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      column-gap: 20px;
+    }
+  }
+
+  .field--check {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-2);
+  }
+
+  .field--check label {
+    font-size: var(--fs-form);
+  }
+
+  .field--check input {
+    flex: none;
+    width: 0.85em;
+    height: 0.85em;
+    accent-color: var(--color-link);
+  }
+
+  .hint {
+    display: block;
+    font-size: var(--fs-form);
+    line-height: var(--lh-form);
+    margin-top: var(--space-2);
+  }
+
+  /* The original submit is plain text with no affordance at all. This keeps the
+     type, the case and the centring, and adds the lightest thing that still
+     reads as clickable: a hairline under the word. */
+  .form__submit {
+    margin: var(--space-6) 0 0;
+    text-align: center;
+  }
+
+  .form__submit button {
+    background: none;
+    border: 0;
+    border-bottom: 1px solid var(--color-text);
+    border-radius: 0;
+    padding: 0 var(--space-1) var(--space-1);
+    cursor: pointer;
+    font-family: var(--font-body);
+    font-weight: var(--fw-body);
+    font-size: var(--fs-button);
+    line-height: var(--lh-button);
+    color: var(--color-text);
+    letter-spacing: 0.04em;
+  }
+
+  .form__submit button:hover {
+    color: var(--color-link-hover);
+    border-bottom-color: var(--color-link-hover);
+  }
+
+  .botcheck {
+    display: none !important;
+  }
+</style>
+
+<script is:inline>
+  // Progressive enhancement only — native `required` still does the validation
+  // with JS off, and the form submits correctly without this script.
+  const model = document.getElementById('model');
+
+  /* Arriving from a product page's "Begär offert…" link, with ?modell=Stol 314.
+     The value is assigned to .value, never to markup, so nothing in the query
+     string can become HTML. An empty field is a precondition: a value the
+     visitor has already typed outranks one that came from a link. */
+  if (model && !model.value) {
+    const wanted = new URLSearchParams(location.search).get('modell');
+    if (wanted) model.value = wanted.slice(0, 120);
+  }
+
+</script>

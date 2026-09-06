@@ -1,0 +1,273 @@
+---
+/**
+ * Footer.
+ *
+ * The live footer is three centred lines — company name, phone and email,
+ * address — and nothing else. This keeps that restraint and the same two ink
+ * colours, but gives the information a visitor actually needs room to exist:
+ * the entrance on Södra Dryckesgränd, a short navigation column, and the
+ * memberships the client already publishes on /om-oss/. Thin rules, no boxes,
+ * no fills, no icons.
+ *
+ * Opening hours are omitted. The client has never published any and none are
+ * invented — see company.ts.
+ *
+ * ROLLED BACK from the tracked-capitals rebuild, which put a second set of
+ * capitals on the page and set them competing with the wordmark. Kept from that
+ * attempt, because these parts were right:
+ *
+ *   1. Instagram sits under Kontakt. It is a way of reaching the workshop, not
+ *      a membership, and moving it left one heading per column.
+ *   2. One line box for every line in every column. No per-item margins: the
+ *      line-height is the spacing, so line 3 of column 1 sits level with line 3
+ *      of column 4 across the whole width.
+ *   3. Place names cannot break. See `keepTogether` below.
+ *   4. Room at the bottom so the assistant's launcher does not cover the last
+ *      line of the page.
+ *
+ * The column headings are set apart by a hairline under each one — chosen from
+ * four candidates that were rendered and compared before anything was written
+ * here. See the note on .site-footer__h.
+ */
+import { company } from '../data/company';
+import { NAV_KEYS, PAGE_PATHS, withBase, type Lang, type PageKey } from '../i18n/config';
+import { t } from '../i18n/ui';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const s = t(lang);
+
+const nav = NAV_KEYS.map((key: PageKey) => ({
+  href: withBase(PAGE_PATHS[key][lang]),
+  label: s.nav[key as keyof typeof s.nav],
+}));
+
+const mapsUrl =
+  `https://www.openstreetmap.org/?mlat=${company.geo.lat}&mlon=${company.geo.lon}` +
+  `#map=${company.geo.zoom}/${company.geo.lat}/${company.geo.lon}`;
+
+/**
+ * "Ingång från Södra Dryckesgränd" was breaking after "Södra", which reads as
+ * two places rather than one street. The street name is bound with non-breaking
+ * spaces so the line breaks before it or not at all. Taken from the data, not
+ * retyped, so both languages get it and the name has one home.
+ */
+function keepTogether(text: string, phrase: string): string {
+  return text.replace(phrase, phrase.replace(/ /g, ' '));
+}
+
+const entrance = keepTogether(company.entrance[lang], company.entrance.street);
+
+/**
+ * "Hantverksvandringar i Gamla stan" was breaking after "Gamla", which splits a
+ * place name across two lines exactly as the street name did. Same treatment,
+ * same reason: a name of a place is one word as far as line breaking goes.
+ */
+const memberships = company.memberships.map((m) => ({
+  ...m,
+  name: keepTogether(m.name, 'Gamla stan'),
+}));
+---
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="site-footer__cols">
+      <section class="site-footer__col" aria-labelledby="foot-contact">
+        <h2 class="site-footer__h" id="foot-contact">{s.footerContact}</h2>
+        <ul>
+          <li><a href={company.phone.href}>{company.phone.display}</a></li>
+          <li><a href={`mailto:${company.email}`}>{company.email}</a></li>
+          <li>
+            <a href={company.instagram.url} rel="noopener">Instagram {company.instagram.handle}</a>
+          </li>
+        </ul>
+      </section>
+
+      <section class="site-footer__col" aria-labelledby="foot-visit">
+        <h2 class="site-footer__h" id="foot-visit">{s.footerVisit}</h2>
+        <ul>
+          <li>{company.address.street}</li>
+          <li>{company.address.postalCode}&nbsp;{company.address.city}</li>
+          <li>{entrance}</li>
+          <li class="site-footer__away">
+            <a href={mapsUrl} rel="noopener">{s.openInMaps}</a>
+          </li>
+        </ul>
+      </section>
+
+      <nav class="site-footer__col" aria-labelledby="foot-nav">
+        <h2 class="site-footer__h" id="foot-nav">{s.footerNav}</h2>
+        <ul>
+          {nav.map((item) => <li><a href={item.href}>{item.label}</a></li>)}
+          <li><a href={withBase(PAGE_PATHS.history[lang])}>{s.historyLabel}</a></li>
+        </ul>
+      </nav>
+
+      <section class="site-footer__col" aria-labelledby="foot-more">
+        <h2 class="site-footer__h" id="foot-more">{s.footerMemberships}</h2>
+        <ul>
+          {
+            memberships.map((m) => (
+              <li>
+                {m.url ? (
+                  <a href={m.url} rel="noopener">
+                    {m.name}
+                  </a>
+                ) : (
+                  m.name
+                )}
+              </li>
+            ))
+          }
+        </ul>
+      </section>
+    </div>
+
+    <p class="site-footer__legal">{company.legalName}</p>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    margin-top: var(--space-6);
+    padding-block: var(--space-5) var(--space-5);
+    border-top: 1px solid var(--color-text);
+    font-size: var(--fs-nav);
+    /* One line box, everywhere. Every gap in this footer is a multiple of it,
+       which is what makes the four columns share a rhythm instead of each
+       finding its own. */
+    line-height: 1.6;
+  }
+
+  .site-footer__cols {
+    display: grid;
+    /* minmax(0, …) here too. The single-column case had the same fault as the
+       four-column one: at a 200% root font the email address is 377px wide and
+       floored the track past the 330px the wrap allows, putting 17px of
+       horizontal scroll on every page of the site. Note that overflow-wrap:
+       break-word does NOT lower an element's min-content contribution — only
+       flooring the track does. */
+    grid-template-columns: minmax(0, 1fr);
+    /* One blank line between stacked columns on a phone, two column widths of
+       air between them side by side. */
+    gap: 1.6em 0;
+  }
+
+  @media (min-width: 576px) {
+    .site-footer__cols {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 3.2em var(--space-4);
+    }
+  }
+
+  @media (min-width: 851px) {
+    .site-footer__cols {
+      /* minmax(0, …), not 1fr. A bare 1fr floors at min-content, and at a 200%
+         root font size the Medlemskap column's min-content reached 349px —
+         four of those plus gaps burst the 1206px wrap and put a horizontal
+         scrollbar on EVERY page of the site. The wrap is in pixels while the
+         text scales with the root font; flooring the tracks at zero is what
+         lets the two live together. */
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: var(--space-4);
+    }
+  }
+
+  /* No capitals: the wordmark in the header owns that treatment, and a second
+     set of tracked capitals on the same page competes with it.
+
+     A hairline the width of the column instead. It uses the language the rest
+     of the site already speaks — thin rules — rather than borrowing the
+     wordmark's capitals or dropping the contrast, and because all four rules
+     land at the same height they reinforce the shared baseline instead of
+     merely marking four headings. Stacked on a phone, each rule gives its
+     section a visible start.
+
+     Values are exactly what was reviewed in the screenshot; the 0.8em they add
+     below the heading applies to all four columns, so the rows still line up
+     straight across. */
+  .site-footer__h {
+    margin: 0 0 0.45em;
+    padding-bottom: 0.35em;
+    border-bottom: 1px solid rgba(33, 33, 33, 0.24);
+    font-size: inherit;
+    font-weight: var(--fw-heading);
+    line-height: inherit;
+  }
+
+  .site-footer p {
+    margin: 0;
+  }
+
+  .site-footer ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* No per-item margins. The line box is the spacing, so every line in every
+     column falls on the same step across the full width. */
+  .site-footer li {
+    margin: 0;
+    /* A membership name is longer than its column once the text is enlarged.
+       Breaking a long word is better than pushing the page sideways. */
+    overflow-wrap: break-word;
+  }
+
+  /* The one line that leaves the site. Separated by a whole line so it stops
+     crowding the address, and underlined so it reads as something to follow
+     rather than as a fourth line of the address. */
+  .site-footer__away {
+    margin-top: 1.6em;
+  }
+
+  .site-footer__away a {
+    text-decoration: underline;
+    text-underline-offset: 0.18em;
+  }
+
+  /* An ending, not another heading. No rule above it: the four hairlines under
+     the column headings are the footer's punctuation, and a fifth one down here
+     drew a box round the columns and gave the closing line a heading's weight.
+     What is left to separate it is air, the smallest size on the page, a
+     quieter ink and ordinary sentence case. Nothing about it asks to be read
+     first.
+
+     `.site-footer p.site-footer__legal`, not the bare class. `.site-footer p`
+     above sets `margin: 0`, and Astro's scoping compiles it to
+     `.site-footer[cid] p[cid]` — one class, two attributes and a type — which
+     outranks a lone `.site-footer__legal[cid]`. The margin this rule used to
+     declare therefore never applied at all: the old separation came entirely
+     from the 1.6em of padding above the hairline. Verified in the browser, not
+     assumed. */
+  .site-footer p.site-footer__legal {
+    /* Three line boxes. The hairline used to do the separating; now the space
+       does it alone, and it has to be plainly more than the 1.6em that divides
+       two stacked sections on a phone or the line reads as a fifth section.
+       Measured in the footer's own line box (--fs-nav x 1.6) rather than in
+       this line's smaller em, so the gap keeps step with the columns at both
+       type sizes: 76.8px on a phone, 96px from 851px up. Two line boxes still
+       sat too close under the seven-line navigation column at 1440; four left a
+       band of empty page. */
+    margin-top: calc(var(--fs-nav) * 1.6 * 3);
+    font-size: var(--fs-form);
+    /* 0.7, not lower. Measured: 0.6 renders #7a7a7a, which is 4.29:1 on white
+       and fails WCAG AA for normal text — it cost the page its 100. 0.7 renders
+       #646464 at 5.95:1 and is still plainly quieter than the text above. */
+    color: rgba(33, 33, 33, 0.7);
+  }
+
+  /* Below the desktop breakpoint the closing line runs nearly the full width,
+     and the assistant's launcher is fixed in the bottom-right corner — so the
+     last line of the page was sitting underneath it. The launcher is 41px tall
+     with a 16px offset; this clears it with a line to spare. Measured, not
+     guessed. */
+  @media (max-width: 850px) {
+    .site-footer {
+      padding-bottom: calc(var(--space-5) + 4rem);
+    }
+  }
+</style>

@@ -1,0 +1,195 @@
+---
+import Figure from '../Figure.astro';
+import { productEn } from '../../lib/content';
+import { cardTitle } from '../../lib/products';
+import { categoryLabel } from '../../data/categories';
+import { company } from '../../data/company';
+import { PAGE_PATHS, productPath, categoryPath, withBase, type Lang } from '../../i18n/config';
+import { t } from '../../i18n/ui';
+
+interface Props {
+  lang: Lang;
+  entry: any;
+  prev: any;
+  next: any;
+}
+const { lang, entry, prev, next } = Astro.props;
+const d = entry.data;
+const s = t(lang);
+
+/**
+ * The designer / client / year block is reconstructed from `body_text`, which
+ * is the verbatim published record, rather than re-assembled from the typed
+ * fields. That preserves the exact wording, including the singular/plural
+ * difference between "Formgiven av" and "Formgivna av" and the two different
+ * shapes the year takes. English comes from the parallel translation.
+ */
+const svLines = d.body_text.split('\n');
+const svOrderIdx = svLines.findIndex((l: string) => l.startsWith('Beställ här'));
+
+const en = lang === 'en' ? productEn(d.slug) : null;
+
+const designerLines: string[] = en ? en.designerLines : svLines.slice(1, svOrderIdx);
+const orderLabel = en ? en.orderLabel : svLines[svOrderIdx];
+const backLabel = en ? en.backLabel : svLines[svLines.length - 1];
+const description = en ? en.description : d.description;
+const material = en ? en.material : d.material;
+const care = en ? en.care : d.care;
+
+const orderMailto = `mailto:${company.email}?subject=${encodeURIComponent(d.name)}`;
+
+/**
+ * A second route to the same conversation, for anyone who would rather not open
+ * a mail client: the contact form with the Modell field already filled in. The
+ * model travels as a query parameter and the form reads it on arrival.
+ *
+ * `d.name` is used rather than `cardTitle()` so this link and the mailto subject
+ * above name the model identically. For stol-258 that means "Soffa 258", which
+ * is what its own <h1> says — see the TODO below.
+ *
+ * The label is new UI copy — the mailto's label above it is the client's own
+ * published wording — and lives in src/i18n/ui.ts with every other UI string.
+ */
+const quoteHref = `${withBase(PAGE_PATHS.contact[lang])}?modell=${encodeURIComponent(d.name)}`;
+
+
+/**
+ * Measurements render from `dimensions_raw` — the verbatim published line —
+ * because the typed fields are null exactly where the source is not a plain
+ * number (seat-height ranges on soffa-230 / stol-314 / stol-c, "Längd" instead
+ * of "Djup" on pall-230). bord-olika-modeller has no block at all and gets
+ * nothing rather than an empty list.
+ */
+const rawDims = en ? en.dimensionsRaw : d.dimensions_raw;
+const measurementLines: string[] = rawDims ? rawDims.split(' | ') : [];
+---
+
+<div class="wrap product">
+  {/*
+    TODO(client): stol-258 is stored and rendered as "Soffa 258" while its URL,
+    page title, product card and its own body copy below all say "Stol 258".
+    Left exactly as published — a client decision.
+    TODO(client): pall-230 and soffa-230 refer below to "Stol 230", a product
+    that has no page; it is published as "Badhusstolen 230". Left as written and
+    deliberately not linked.
+  */}
+  <div class="product__media">
+    <Figure
+      file={d.images[0].file}
+      variant="content"
+      sizes="(min-width: 851px) 561px, 92vw"
+      lightbox
+      loading="eager"
+      lang={lang}
+    />
+  </div>
+
+  <div class="product__text">
+    <h1>{d.name}</h1>
+
+    <p>
+      {
+        designerLines.map((line: string, i: number) => (
+          <>
+            {i > 0 && <br />}
+            {line}
+          </>
+        ))
+      }
+      <br />
+      <a href={orderMailto}>{orderLabel}</a>
+      <br />
+      <a href={quoteHref}>{s.requestQuote}</a>
+    </p>
+
+    {description && <p>{description}</p>}
+
+    {material && <p>{lang === 'sv' ? 'Material: ' : 'Material: '}{material}</p>}
+
+    {
+      measurementLines.length > 0 && (
+        <p class="product__dims">
+          {measurementLines.map((line, i) => (
+            <>
+              {i > 0 && <br />}
+              {line}
+            </>
+          ))}
+        </p>
+      )
+    }
+
+    {care && <p>{care}</p>}
+
+    {/* Not on the live product page. Added because the category pages otherwise
+        have no inbound link anywhere on the site. Labelled so it does not read
+        as a repeat of the designer credit above. */}
+    <p class="product__meta">
+      {s.category}{' '}
+      <a href={withBase(categoryPath(lang, d.category_slug))}>
+        {categoryLabel(d.category_slug, lang)}
+      </a>
+    </p>
+
+    <p>
+      <a href={withBase(PAGE_PATHS.products[lang])}>{backLabel}</a>
+    </p>
+  </div>
+</div>
+
+<nav class="product__nav wrap" aria-label={s.moreModels}>
+  <a href={withBase(productPath(lang, prev.data.slug))} rel="prev">
+    <span class="product__navlabel">{s.previous}</span>
+    {cardTitle(prev.data.slug, prev.data.name)}
+  </a>
+  <a href={withBase(productPath(lang, next.data.slug))} rel="next">
+    <span class="product__navlabel">{s.next}</span>
+    {cardTitle(next.data.slug, next.data.name)}
+  </a>
+</nav>
+
+<style>
+  .product {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-5);
+    align-items: start;
+  }
+
+  @media (min-width: 851px) {
+    .product {
+      grid-template-columns: 1fr 1fr;
+      /* Measured on the live product page: two 561.22px columns inside a 1146px
+         content box, i.e. a ~23px gutter. */
+      gap: var(--grid-gutter);
+    }
+  }
+
+  .product__media :global(img) {
+    width: 100%;
+    height: auto;
+  }
+
+  .product__meta {
+    font-size: var(--fs-nav);
+  }
+
+  .product__nav {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--space-4);
+    margin-top: var(--space-6);
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--color-panel);
+    font-size: var(--fs-nav);
+  }
+
+  .product__nav a:last-child {
+    text-align: right;
+  }
+
+  .product__navlabel {
+    display: block;
+    font-size: var(--fs-form);
+  }
+</style>
