@@ -14,15 +14,17 @@ compatibility_date = "2026-09-05"
 binding = "RATE"
 id = "2e179e91259b4423a943cd4435656860"
 
-[vars]
-# Opens the two localhost origins (4321, 8000) IN ADDITION to the three
-# production ones. The site is not published, so localhost is the only origin
-# that can reach this worker today and the demo would not work without it.
+# NO [vars] BLOCK, AND TILLAT_LOKALT IN PARTICULAR IS NOT SET.
 #
-# TODO(launch): REMOVE THIS LINE before the demo is shown from a real host. A
-# page served from localhost on ANY machine in the world can drive this worker
-# and spend the Anthropic key while it is set.
-TILLAT_LOKALT = "1"
+# That flag opened the two localhost origins (4321, 8000) in addition to the
+# production ones. It was right while the demo existed only on localhost; it is
+# not right now that the site answers on a public host, because a page served
+# from localhost on ANY machine in the world could drive this worker and spend
+# the Anthropic key.
+#
+# The mechanism still exists in index.js. To work on the assistant locally,
+# deploy a SEPARATE dev worker with the flag set — never set it on this one:
+#   npx wrangler deploy --name larsson-korgmakare-assistent-dev --var TILLAT_LOKALT:1
 
 # The Anthropic key is a SECRET, never a var, and never in this file:
 #   npx wrangler secret put ANTHROPIC_API_KEY

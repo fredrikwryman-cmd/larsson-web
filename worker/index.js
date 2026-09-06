@@ -23,6 +23,13 @@ const ALLOWED_ORIGINS = [
   'https://larssonkorgmakare.se',
   'https://www.larssonkorgmakare.se',
   'https://fredrikwryman-cmd.github.io',
+  /* The demo host. The site is served from its own subdomain in the domain
+     root, so the origin is the bare host — a path is never part of an Origin
+     header, which is why the old github.io entry above covers no /larsson-web
+     prefix either. Kept alongside it rather than replacing it: the github.io
+     name still answers, and one of the two will be retired deliberately, not
+     by accident. */
+  'https://larsson.aimstudios.se',
 ];
 
 /* Development origins. A page served from localhost on ANY machine can drive

@@ -23,10 +23,11 @@ Disallow: /
 # User-agent: *
 # Allow: /
 #
-# Sitemap: https://fredrikwryman-cmd.github.io/larsson-web/sitemap-index.xml
+# Sitemap: https://larsson.aimstudios.se/sitemap-index.xml
 #
-# The host above comes from `site` in astro.config.mjs. It used to read
-# example.github.io — a placeholder that would have published a sitemap
-# reference pointing nowhere, which is the exact defect the note above
-# complains about on the old WordPress site. If the demo moves to the
-# client's own domain, this line and that config value change together.
+# The host above comes from `site` in astro.config.mjs, which now reads
+# https://larsson.aimstudios.se — the demo subdomain, matching public/CNAME.
+# It has twice been a value that pointed nowhere: first a placeholder
+# example.github.io, then a /larsson-web/ path that stopped existing when the
+# site moved into a domain root. If the demo moves again, this line, `site`
+# and public/CNAME change together, and none of the three may move alone.

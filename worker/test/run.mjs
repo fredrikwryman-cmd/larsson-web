@@ -274,7 +274,7 @@ await test('1  Otillåtet ursprung avvisas 403 FÖRE något upstream-anrop', asy
 
 /* 2 -------------------------------------------------------------------------- */
 await test('2  Tillåtna ursprung: produktion alltid, localhost bara med TILLAT_LOKALT=1', async () => {
-  eq(KONST.ALLOWED_ORIGINS.length, 3, 'antal produktions-ursprung');
+  eq(KONST.ALLOWED_ORIGINS.length, 4, 'antal produktions-ursprung');
   eq(KONST.LOKALA_ORIGINS.length, 2, 'antal lokala ursprung');
 
   let i = 0;

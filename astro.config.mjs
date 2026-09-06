@@ -156,18 +156,21 @@ const gravurGuard = {
 // https://astro.build/config
 export default defineConfig({
   /**
-   * Future GitHub Pages URL.
+   * The demo is served from its own subdomain, in the domain root — the same
+   * arrangement as ad.aimstudios.se and bopg.aimstudios.se. `public/CNAME`
+   * carries the hostname to GitHub Pages; this is the other half of it.
    *
-   * TODO(confirm): derived from the local GitHub account (`fredrikwryman-cmd`)
-   * and a repo named `larsson-web`. If the repo is created under a different
-   * name or owner, change `site` AND `base` together — a mismatch silently
-   * breaks every absolute URL in the sitemap.
+   * There is deliberately NO `base`. Astro then uses '/', so
+   * `import.meta.env.BASE_URL` is '/' and every path built through
+   * `withBase()` in src/i18n/config.ts loses the old `/larsson-web` prefix on
+   * its own. Canonical, hreflang, the JSON-LD @id, og:url and the sitemap all
+   * derive from `site` and that same helper, so they move together — this is
+   * the only place either value is written down.
    *
-   * TODO(launch): when the client's real domain is connected, set
-   * `site` to that domain and delete `base` entirely.
+   * TODO(launch): when the client's real domain is connected, `site` and
+   * `public/CNAME` change together, and neither may change without the other.
    */
-  site: 'https://fredrikwryman-cmd.github.io',
-  base: '/larsson-web',
+  site: 'https://larsson.aimstudios.se',
 
   /**
    * The live WordPress site serves every URL with a trailing slash
