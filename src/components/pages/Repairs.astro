@@ -19,35 +19,61 @@ const contact = t[7];
 const repairMailto = `mailto:${company.email}?subject=${encodeURIComponent('Reparation')}`;
 ---
 
-<div class="wrap wrap--narrow">
+<div class="wrap">
   <h1>{heading}</h1>
   <p class="lead">{lead}</p>
 
   <div class="photos">
-    <Figure file="Reparation2.jpg" sizes="(min-width: 700px) 250px, 90vw" variant="thumb" lightbox lang={lang} />
-    <Figure file="Reparation3.jpg" sizes="(min-width: 700px) 250px, 90vw" variant="thumb" lightbox lang={lang} />
-    <Figure file="Reparation1.jpg" sizes="(min-width: 700px) 250px, 90vw" variant="thumb" lightbox lang={lang} />
+    <Figure
+      file="Reparation2.jpg"
+      sizes="(min-width: 992px) 366px, (min-width: 576px) 45vw, 90vw"
+      variant="thumb"
+      lightbox
+      lang={lang}
+    />
+    <Figure
+      file="Reparation3.jpg"
+      sizes="(min-width: 992px) 366px, (min-width: 576px) 45vw, 90vw"
+      variant="thumb"
+      lightbox
+      lang={lang}
+    />
+    <Figure
+      file="Reparation1.jpg"
+      sizes="(min-width: 992px) 366px, (min-width: 576px) 45vw, 90vw"
+      variant="thumb"
+      lightbox
+      lang={lang}
+    />
   </div>
 
-  {
-    body.map((b) => (
-      <p>
-        {b.lines.map((line, i) => (
-          <>
-            {i > 0 && <br />}
-            {line}
-          </>
-        ))}
-      </p>
-    ))
-  }
+  {/*
+    The prose carries its own measure, the way /uppdrag/ does with `.others`.
+    The page column is the site's full 1146px now; letting five paragraphs run
+    the whole of it would give this page a 150-character line, which is what the
+    narrow wrap used to prevent by shrinking the entire page.
+  */}
+  <div class="body">
+    {
+      body.map((b) => (
+        <p>
+          {b.lines.map((line, i) => (
+            <>
+              {i > 0 && <br />}
+              {line}
+            </>
+          ))}
+        </p>
+      ))
+    }
 
-  <p class="contact">
-    {contact.lines[0]}
-    <br />
-    <a href={company.phone.href}>{company.phone.display}</a>{', '}
-    <a href={repairMailto}>{company.email}</a>
-  </p>
+    <p class="contact">
+      {contact.lines[0]}
+      <br />
+      <a href={company.phone.href}>{company.phone.display}</a>{', '}
+      <a href={repairMailto}>{company.email}</a>
+    </p>
+  </div>
 </div>
 
 <style>
@@ -58,14 +84,23 @@ const repairMailto = `mailto:${company.email}?subject=${encodeURIComponent('Repa
     margin-bottom: var(--space-5);
   }
 
+  /* Identical to the three-up row of cases on /uppdrag/: same 576px breakpoint,
+     same --grid-gutter, same square crop. It used to break at 700px with a flat
+     24px gap, which put this page on a grid no other page shares. */
   .photos {
     display: grid;
     grid-template-columns: 1fr;
-    gap: var(--space-4);
+    /* Column gap is the shared --grid-gutter, so the three columns land exactly
+       where /uppdrag/'s do. Row gap is not: below 576px the gutter is 0, and on
+       /uppdrag/ each stacked case still has its name and designer between the
+       pictures. Here the pictures are bare, and a 0 row gap fused all three into
+       one strip. This gap only ever shows in the stacked state; from 576px up
+       there is a single row and it has no effect on the geometry. */
+    gap: var(--space-4) var(--grid-gutter);
     margin-bottom: var(--space-6);
   }
 
-  @media (min-width: 700px) {
+  @media (min-width: 576px) {
     .photos {
       grid-template-columns: repeat(3, 1fr);
     }
@@ -75,6 +110,10 @@ const repairMailto = `mailto:${company.email}?subject=${encodeURIComponent('Repa
     width: 100%;
     aspect-ratio: 1 / 1;
     object-fit: cover;
+  }
+
+  .body {
+    max-width: 62ch;
   }
 
   .contact {
