@@ -31,7 +31,7 @@ const history = t[5].lines.join(' ');
 const backLabel = t[6].lines[0];
 ---
 
-<div class="wrap wrap--narrow">
+<div class="wrap">
   <h1>{heading}</h1>
   <p>
     <a
@@ -40,10 +40,19 @@ const backLabel = t[6].lines[0];
     >
   </p>
 
+  {/*
+    A slide is the full width of the carousel viewport, which is the page
+    column less the 6px of padding the viewport keeps on each side for the
+    focus ring. The column is 1146px once the wrap reaches its 1206px
+    max-width, and 100vw - 60px below that, so a slide is 1134px and
+    100vw - 72px. The old value, 788px, was measured against the narrow
+    820px wrap this page no longer uses; left as it was it would have asked
+    for a 900px rendition to fill 1134px.
+  */}
   <Carousel
     slides={slides}
     label={heading}
-    sizes="(min-width: 851px) 788px, 92vw"
+    sizes="(min-width: 1206px) 1134px, calc(100vw - 72px)"
     lang={lang}
   />
 
@@ -53,7 +62,13 @@ const backLabel = t[6].lines[0];
 </div>
 
 <style>
+  /* The page column is the site's full 1146px now, the same as /nm-040/ and
+     /akes/. Those two set their text in one half of a two-column grid, which
+     gives it a measure; this page has no second column, so the paragraph
+     carries its own — the same 62ch /uppdrag/ uses for `.others`. Without it
+     this one paragraph would run about 150 characters to the line. */
   .st-history {
     margin-block: var(--space-5);
+    max-width: 62ch;
   }
 </style>
