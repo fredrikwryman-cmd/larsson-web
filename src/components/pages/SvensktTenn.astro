@@ -19,6 +19,22 @@ const moreLabel = t[1].lines[0];
  * prints all the text underneath, so nothing tells a reader which credit
  * belongs to which picture. The carousel shape is preserved; the pairing is the
  * fix. Slide 4 genuinely has no credit line in the source, so it carries none.
+ *
+ * SOURCE(client): slide 4 is Josef Frank. The client identified him on
+ * 2026-09-07; the harvested page does not say so and neither does any other
+ * source we hold. The file is named and the alt text written accordingly —
+ * josef-frank-i-flatad-rottingstol.jpg, "Josef Frank i tweedkavaj och fluga…" —
+ * and it was `man-i-flatad-rottingstol-arkivbild.jpg` for exactly as long as we
+ * could not say who it was.
+ *
+ * The visible caption is still absent, because the client identified the man,
+ * not the photograph: there is no credit line to print, and inventing one would
+ * be a different thing from naming a face.
+ *
+ * SOURCE(client) marks a fact that came from the client rather than from the
+ * harvest. It is not a TODO — nothing is pending — it records where the claim
+ * comes from, so that whoever reads it next knows it cannot be checked against
+ * larsson-harvest and must not be "corrected" back.
  */
 const slides = [
   { file: photos[0].file, caption: t[2].lines.join(' ') },

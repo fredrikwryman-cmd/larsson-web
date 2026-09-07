@@ -6,11 +6,13 @@ named for what they show, in lowercase ASCII with hyphens, because a filename is
 one of the few things Google Images has to rank on and a chair is something
 people look for by picture rather than by word.
 
-**The harvest record has not moved.** Every `file` in
-`src/data/page-content.json` and `src/content/products/*.json` sits beside a
-`url` that still holds the original WordPress address, filename included. That
-field is the archive of what the client published; this table is only the map
-from it to what we serve.
+**The harvest record has not moved.** In `src/content/products/*.json` every
+`file` sits beside a `url` holding the original WordPress address, filename
+included. `src/data/page-content.json` carries no `url` for its images — it
+never did — so for those the record of where each file came from is
+`larsson-harvest/assets-manifest.csv`, which lists every original filename, its
+source URL, its byte size and the pages it appeared on. Neither record moves;
+this table is only the map from them to what we serve.
 
 | Was | Is |
 | --- | --- |
@@ -38,7 +40,7 @@ from it to what we serve.
 | `svenskt_tenn_miljo_mobler_50-…-83.jpg` | `svenskt-tenn-josef-frank-rottingsoffa-och-stol.jpg` |
 | `svenskt_tenn_miljo_mobler_51-…-83.jpg` | `svenskt-tenn-josef-frank-rottingbord-och-liggstol.jpg` |
 | `Estrid-Ericson-o-Josef-Frank-NM-…-Kjellström-…_3.jpg` | `estrid-ericson-och-josef-frank-nationalmuseum-1952.jpg` |
-| `36270005.jpg` | `man-i-flatad-rottingstol-arkivbild.jpg` |
+| `36270005.jpg` | `josef-frank-i-flatad-rottingstol.jpg` — see the note below |
 | `map-skeppsbron-46.png` | `karta-skeppsbron-46-gamla-stan-stockholm.png` |
 | `Extend_and_warm_photograph_2K_202609051926.jpeg` | `ingang-sodra-dryckesgrand-larsson-korgmakare.jpeg` |
 
@@ -61,6 +63,21 @@ name. TODO(client): say so if you would rather the wordmark were renamed too.
   who cannot see the image; the filename is for a machine deciding what the
   image is of. Naming a product, what it is and who drew it does more than
   repeating a sentence about armrests.
-- Do not assert what the source does not say. `36270005.jpg` shows a man in a
-  rattan chair and the client publishes no caption for it, so the file is called
-  `man-i-flatad-rottingstol-arkivbild.jpg` and not by any name.
+- Do not assert what the source does not say — and say so out loud when the
+  source later changes. `36270005.jpg` shows a man in a rattan chair; the
+  client's own page carries no caption for it, so it was named
+  `man-i-flatad-rottingstol-arkivbild.jpg`, deliberately after nobody. On
+  2026-09-07 the client identified him as Josef Frank, and the file, the alt
+  text in both languages and this table changed accordingly. That is the whole
+  point of the rule: the name follows what is actually known, and it moves when
+  what is known moves.
+
+## SOURCE(client)
+
+The identification above is marked `SOURCE(client)` in
+`src/components/pages/SvensktTenn.astro`. The tag means a fact that came from
+the client rather than from the harvest. It is **not** a TODO — nothing is
+pending. It records that the claim cannot be verified against
+`larsson-harvest/` and must not be "corrected" back by someone who looks there
+and finds no caption. Every other statement on the site can be traced to the
+harvested page; this one can only be traced to the client.

@@ -15,9 +15,10 @@ import type { Lang } from '../i18n/config';
  * — 230_27193-1x1.jpg, C_27208_1x1.jpg — and are now descriptive, lowercase,
  * ASCII and hyphenated, because the filename is one of the few signals Google
  * Images has to go on and a chair is something people look for by picture. The
- * WordPress name is still recorded, unchanged, in the `url` field beside every
- * `file` in src/data/page-content.json and src/content/products/*.json: that is
- * the harvest record and it does not move. src/assets/README.md holds the map.
+ * WordPress name is still recorded, unchanged: in the `url` beside every `file`
+ * in src/content/products/*.json, and for the rest in
+ * larsson-harvest/assets-manifest.csv. Neither record moves.
+ * src/assets/README.md holds the map.
  */
 const modules = import.meta.glob<{ default: ImageMetadata }>(
   '../assets/*.{jpg,jpeg,png,JPG,JPEG,PNG}',
