@@ -36,3 +36,6 @@ pnpm-debug.log*
 # ---------------------------------------------------------------------------
 src/assets/fonts/gravur/*.woff
 src/assets/fonts/gravur/*.woff2
+
+# Playwright MCP scratch output (page snapshots, console logs)
+.playwright-mcp/
