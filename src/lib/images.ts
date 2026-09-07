@@ -4,12 +4,20 @@ import altTextEn from '../i18n/alt-text.en.json';
 import type { Lang } from '../i18n/config';
 
 /**
- * Resolve a harvested image by its ORIGINAL WordPress filename.
+ * Resolve an image by its filename in src/assets.
  *
  * Astro's <Image> needs a real module reference, not a string path, so every
- * asset is eagerly globbed once here and looked up by basename. Pages address
- * images by the same filename the harvest and alt-drafts.md use, which keeps
- * one vocabulary across the whole project.
+ * asset is eagerly globbed once here and looked up by basename. One vocabulary
+ * across the whole project: the same string names the file on disk, keys the
+ * alt text, and appears in the JSON the pages read.
+ *
+ * The filenames are no longer the harvest's. They were the WordPress originals
+ * — 230_27193-1x1.jpg, C_27208_1x1.jpg — and are now descriptive, lowercase,
+ * ASCII and hyphenated, because the filename is one of the few signals Google
+ * Images has to go on and a chair is something people look for by picture. The
+ * WordPress name is still recorded, unchanged, in the `url` field beside every
+ * `file` in src/data/page-content.json and src/content/products/*.json: that is
+ * the harvest record and it does not move. src/assets/README.md holds the map.
  */
 const modules = import.meta.glob<{ default: ImageMetadata }>(
   '../assets/*.{jpg,jpeg,png,JPG,JPEG,PNG}',
@@ -19,8 +27,10 @@ const modules = import.meta.glob<{ default: ImageMetadata }>(
 const byName = new Map<string, ImageMetadata>();
 for (const [path, mod] of Object.entries(modules)) {
   const name = path.split('/').pop();
-  // Filenames are normalised to Unicode NFC on import; normalise the key too so
-  // a decomposed "ö" (as in the Kjellström photo) still resolves.
+  // Filenames are normalised to Unicode NFC on import; normalise the key too.
+  // This used to matter for a decomposed "ö" in the Kjellström photo's name.
+  // Every asset is ASCII now, so nothing depends on it — it stays because the
+  // next file someone drops in here may not be.
   if (name) byName.set(name.normalize('NFC'), mod.default);
 }
 
