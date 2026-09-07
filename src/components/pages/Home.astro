@@ -66,6 +66,27 @@ const tiles = [
     </ul>
   </nav>
 
+  {/*
+    The Svenskt Tenn work, lifted out of /svenskt-tenn/ where it was the only
+    place a visitor could find it. Placed under the tiles and above repairs
+    because it is the strongest reference the workshop has, and it belongs
+    above the everyday service, not instead of it.
+
+    No new visual idiom: the same <section aria-labelledby> shape, the same h2,
+    the same 62ch measure as the repairs block below. It reads as the second of
+    two paragraphs on the page, which is what it is.
+
+    The link goes to PAGE_PATHS.svensktTenn, which is /svenskt-tenn/ in Swedish
+    and /en/svenskt-tenn/ in English. There is no /uppdrag/svenskt-tenn/ route
+    — the three case pages sit at the domain root, reached from /uppdrag/ —
+    and hard-coding a path here would break the moment the slug moved.
+  */}
+  <section class="home__frank" aria-labelledby="frank-heading">
+    <h2 id="frank-heading">{s.home_frankHeading}</h2>
+    <p>{s.home_frank}</p>
+    <p><a href={withBase(PAGE_PATHS.svensktTenn[lang])}>{s.home_frankLink}</a></p>
+  </section>
+
   <section class="home__repairs" aria-labelledby="repairs-heading">
     <h2 id="repairs-heading">{s.home_repairsHeading}</h2>
     <p>{s.home_repairs}</p>
@@ -155,6 +176,10 @@ const tiles = [
     line-height: var(--lh-display);
   }
 
+  /* One rule for both blocks: they are the same kind of thing and must not
+     drift apart. The margin collapses between them, so the two sections sit
+     one --space-6 apart rather than two. */
+  .home__frank,
   .home__repairs {
     margin-block: var(--space-6);
     max-width: 62ch;

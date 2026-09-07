@@ -14,6 +14,27 @@ export const ui = {
     home_h1: 'Vi tillverkar & reparerar möbler i rotting, sjögräs och snöre — sedan 1903',
     home_intro:
       'I korgmakeriet på Skeppsbron i Gamla stan arbetar fjärde generationen Larsson. Sedan 1903 har vi tillverkat rottingmöbler för hand, och sedan 1930-talet har vi tillverkat Josef Franks rottingmöbler för Svenskt Tenn. Idag är vi den enda kvarvarande tillverkaren av rottingmöbler i Sverige.',
+    /*
+     * TODO(client): NEW COPY, in the client's name. Every claim below is taken
+     * from what the client already publishes on /om-oss/ and /svenskt-tenn/:
+     * the meeting in the 1930s, that Frank drew and Larsson made, and that it
+     * has continued without interruption. Nothing is added about Frank's
+     * standing, Svenskt Tenn's position or what the furniture is worth — none
+     * of that is in the sources and none of it is the client's to assert.
+     *
+     * TODO(client): CONFIRM THE CLIENT MAY SAY THIS AT ALL. The workshop makes
+     * Svenskt Tenn's rattan furniture; it does not own Josef Frank's name and
+     * is not Svenskt Tenn. There may be an agreement with Svenskt Tenn that
+     * governs how the collaboration may be described, and we know nothing
+     * about it. The wording is deliberately a manufacturing commission —
+     * "tillverkar vi Josef Franks rottingmöbler för Svenskt Tenn" — and must
+     * not drift towards designing them or towards being part of Svenskt Tenn.
+     */
+    home_frankHeading: 'Josef Frank för Svenskt Tenn',
+    home_frank:
+      'Redan på 1930-talet träffade John Larsson arkitekten Josef Frank, som ritade möbler i rotting. John Larsson tillverkade dem, och sedan dess tillverkar vi Josef Franks rottingmöbler för Svenskt Tenn, oavbrutet.',
+    home_frankLink: 'Om arbetet för Svenskt Tenn…',
+
     home_repairsHeading: 'Laga en möbel',
     home_repairs:
       'Har du en möbel som behöver lagas? Vi tar emot allt från enstaka stolar till hela möbelgrupper, och inget uppdrag är för litet. Kom in till verkstaden på Skeppsbron 46, ingång från Södra Dryckesgränd, eller hör av dig så tittar vi på den tillsammans.',
@@ -136,6 +157,13 @@ export const ui = {
     home_h1: 'We make & repair furniture in rattan, seagrass and paper cord — since 1903',
     home_intro:
       "In the workshop on Skeppsbron in Gamla stan the fourth generation of the Larsson family is at work. Since 1903 we have made rattan furniture by hand, and since the 1930s we have made Josef Frank's rattan furniture for Svenskt Tenn. Today we are the only remaining maker of rattan furniture in Sweden.",
+    /* TODO(client): new copy — see the Swedish above, including the note about
+       confirming that the collaboration may be described this way at all. */
+    home_frankHeading: 'Josef Frank for Svenskt Tenn',
+    home_frank:
+      "In the 1930s John Larsson met the architect Josef Frank, who drew furniture in rattan. John Larsson made it, and since then we have made Josef Frank's rattan furniture for Svenskt Tenn without interruption.",
+    home_frankLink: 'About the work for Svenskt Tenn…',
+
     home_repairsHeading: 'Having a piece repaired',
     home_repairs:
       'Do you have a piece of furniture that needs repairing? We take on everything from single chairs to whole suites of furniture, and no job is too small. Come to the workshop at Skeppsbron 46, entrance on Södra Dryckesgränd, or get in touch and we will look at it together.',

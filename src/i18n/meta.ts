@@ -11,16 +11,31 @@ import type { Lang, PageKey } from './config';
 type Meta = { title: string; description: string };
 
 export const pageMeta: Record<PageKey, Record<Lang, Meta>> = {
+  /*
+   * The titles are unchanged, deliberately. "Josef Frank" and "Svenskt Tenn"
+   * are the only terms on this site with reach beyond Stockholm, but the title
+   * is 45 characters of which every word earns its place: rottingmöbler is
+   * what the workshop sells, möbelreparation is what most visitors arrive
+   * searching for, and Gamla stan is the local term. Adding the two names
+   * means dropping one of those three, and a title that trades the service
+   * people search for against a name they may not be searching for yet is a
+   * worse trade than it looks. The names go in the description, where there is
+   * room for both without losing anything.
+   *
+   * TODO(client): the descriptions below name Josef Frank and Svenskt Tenn.
+   * Same caveat as the homepage copy in ui.ts — confirm with the client that
+   * the collaboration may be communicated this way before the site is indexed.
+   */
   home: {
     sv: {
       title: 'Rottingmöbler och möbelreparation i Gamla stan',
       description:
-        'Larsson Korgmakare tillverkar och reparerar möbler i rotting, sjögräs och snöre på Skeppsbron i Gamla stan. Fjärde generationen, för hand, sedan 1903.',
+        'Larsson Korgmakare tillverkar och reparerar möbler i rotting, sjögräs och snöre i Gamla stan. Sedan 1930-talet Josef Franks rottingmöbler för Svenskt Tenn.',
     },
     en: {
       title: 'Rattan furniture and furniture repair in Gamla stan',
       description:
-        'Larsson Korgmakare makes and repairs furniture in rattan, seagrass and paper cord on Skeppsbron in Gamla stan, Stockholm. Fourth generation, by hand, since 1903.',
+        "Larsson Korgmakare makes and repairs furniture in rattan, seagrass and paper cord in Gamla stan, Stockholm. Josef Frank's rattan furniture for Svenskt Tenn.",
     },
   },
   about: {
