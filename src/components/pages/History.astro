@@ -129,13 +129,13 @@ const COPY: Record<Lang, Copy> = {
 const c = COPY[lang];
 ---
 
-<div class="wrap wrap--narrow">
+<div class="wrap">
   <h1>{c.heading}</h1>
   <p class="lead">{c.lead}</p>
 
   <Figure
     file="JakobsbergsgatanElin.jpg"
-    sizes="(min-width: 851px) 788px, 90vw"
+    sizes="(min-width: 1206px) 1146px, calc(100vw - 60px)"
     variant="content"
     lightbox
     lang={lang}
@@ -155,7 +155,7 @@ const c = COPY[lang];
 
   <Figure
     file="verkstad.jpg"
-    sizes="(min-width: 851px) 788px, 90vw"
+    sizes="(min-width: 1206px) 1146px, calc(100vw - 60px)"
     variant="content"
     lightbox
     lang={lang}
@@ -191,6 +191,16 @@ const c = COPY[lang];
      else. */
   .period + .period {
     margin-top: var(--space-5);
+  }
+
+  /* The prose measure. The page column is the site's full 1146px now, the same
+     as every page but /kontakt/, and a period read across all of it would run
+     about 150 characters to the line — the job the narrow wrap used to do by
+     shrinking the whole page. The two photographs are deliberately outside
+     this: they take the column. */
+  .period,
+  .back {
+    max-width: 62ch;
   }
 
   :global(.photo-wide) {

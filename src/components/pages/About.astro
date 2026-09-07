@@ -42,36 +42,58 @@ const linkify = (line: string) =>
     .map((part) => (LINKS[part] ? { href: LINKS[part], text: part } : { text: part }));
 ---
 
-<div class="wrap wrap--narrow">
+<div class="wrap">
   <h1>{heading}</h1>
   <p class="lead">{lead}</p>
 
   <div class="photos">
-    <Figure file="Erica1.jpg" sizes="(min-width: 700px) 250px, 90vw" variant="thumb" lightbox lang={lang} />
     <Figure
-      file="JakobsbergsgatanElin.jpg"
-      sizes="(min-width: 700px) 250px, 90vw"
+      file="Erica1.jpg"
+      sizes="(min-width: 992px) 366px, (min-width: 576px) 45vw, 90vw"
       variant="thumb"
       lightbox
       lang={lang}
     />
-    <Figure file="Verktyg.jpg" sizes="(min-width: 700px) 250px, 90vw" variant="thumb" lightbox lang={lang} />
+    <Figure
+      file="JakobsbergsgatanElin.jpg"
+      sizes="(min-width: 992px) 366px, (min-width: 576px) 45vw, 90vw"
+      variant="thumb"
+      lightbox
+      lang={lang}
+    />
+    <Figure
+      file="Verktyg.jpg"
+      sizes="(min-width: 992px) 366px, (min-width: 576px) 45vw, 90vw"
+      variant="thumb"
+      lightbox
+      lang={lang}
+    />
   </div>
 
-  <h2>{historyHeading}</h2>
-  {history.map((b) => <p>{b.lines.join(' ')}</p>)}
+  {/*
+    The prose carries its own measure; the pictures do not. The page column is
+    the site's full 1146px now, and a paragraph run across all of it would be
+    about 150 characters to the line — which is the job the narrow wrap used to
+    do by shrinking the whole page, images included. Same split as /uppdrag/
+    with `.others`, /reparationer/ and /svenskt-tenn/.
+  */}
+  <div class="body">
+    <h2>{historyHeading}</h2>
+    {history.map((b) => <p>{b.lines.join(' ')}</p>)}
+  </div>
 
   <Figure
     file="verkstad.jpg"
-    sizes="(min-width: 851px) 788px, 90vw"
+    sizes="(min-width: 1206px) 1146px, calc(100vw - 60px)"
     variant="content"
     lightbox
     class="photo-wide"
     lang={lang}
   />
 
-  <h2>{workHeading}</h2>
-  {
+  <div class="body">
+    <h2>{workHeading}</h2>
+    {
     work.map((b) => (
       <p>
         {b.lines.map((line, i) => (
@@ -90,7 +112,8 @@ const linkify = (line: string) =>
         ))}
       </p>
     ))
-  }
+    }
+  </div>
 </div>
 
 <style>
@@ -101,14 +124,27 @@ const linkify = (line: string) =>
     margin-bottom: var(--space-5);
   }
 
+  /* The prose measure. The pictures above and below it stay the full width of
+     the column — that is the whole point of the wider wrap. */
+  .body {
+    max-width: 62ch;
+  }
+
+  /* Identical to the three-up rows on /uppdrag/ and /reparationer/: the same
+     576px breakpoint and the same --grid-gutter between columns. It used to
+     break at 700px with a flat 24px gap, on a grid no other page shared.
+
+     The row gap is this page's own, as on /reparationer/: below 576px the
+     shared gutter is 0, which is right where each stacked item has text under
+     it, and wrong here, where three bare photographs would fuse into a strip. */
   .photos {
     display: grid;
     grid-template-columns: 1fr;
-    gap: var(--space-4);
+    gap: var(--space-4) var(--grid-gutter);
     margin-bottom: var(--space-6);
   }
 
-  @media (min-width: 700px) {
+  @media (min-width: 576px) {
     .photos {
       grid-template-columns: repeat(3, 1fr);
     }
